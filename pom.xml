@@ -449,6 +449,11 @@ limitations under the License.
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.sqoop.execution</groupId>
+        <artifactId>sqoop-execution-spark</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>commons-dbcp</groupId>
         <artifactId>commons-dbcp</artifactId>
         <version>${commons-dbcp.version}</version>
