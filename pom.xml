@@ -436,6 +436,13 @@ limitations under the License.
         <artifactId>sqoop-submission-mapreduce</artifactId>
         <version>${project.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.sqoop.submission</groupId>
+        <artifactId>sqoop-submission-spark</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.sqoop.execution</groupId>
         <artifactId>sqoop-execution-mapreduce</artifactId>
