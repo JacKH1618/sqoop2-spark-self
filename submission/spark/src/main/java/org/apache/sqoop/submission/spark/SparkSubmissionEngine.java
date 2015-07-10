@@ -98,7 +98,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
    * on engine initialization and cloned during each new submission creation.
    */
   private transient Configuration globalConfiguration;
-  //private JobConf jobConf;
+  private transient JobConf jobConf;
 
   //private static final java.io.ObjectStreamField[] serialPersistentFields =  {
       //new ObjectStreamField("globalConfiguration", org.apache.hadoop.conf.Configuration.class) };
@@ -113,7 +113,6 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
     // Build global configuration, start with empty configuration object
     globalConfiguration = new Configuration();
-    /*
     globalConfiguration.clear();
 
     // Load configured hadoop configuration directory
@@ -156,7 +155,6 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
     //if(isLocal()) {
     //LOG.info("Detected MapReduce local mode, some methods might not work correctly.");
-    */
   }
 
 
@@ -185,6 +183,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
     SparkConf sparkJobConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
     JavaSparkContext sparkJavaContext = new JavaSparkContext(sparkJobConf);
+
 
     //Test stub
     String logFile = "/Users/banmeet.singh/spark-1.3.1-bin-cdh4/README.md"; // Should be some file on your system
