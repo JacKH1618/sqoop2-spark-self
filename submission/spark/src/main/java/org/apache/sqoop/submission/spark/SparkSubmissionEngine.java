@@ -72,16 +72,23 @@ import org.apache.log4j.Logger;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.error.code.SparkSubmissionError;
 import org.apache.sqoop.common.SqoopException;
+import org.apache.sqoop.job.mr.SqoopInputFormat;
+import org.apache.sqoop.job.mr.SqoopSplit;
 
 //Hadoop imports
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobConf;
+//import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.io.NullWritable;
+//import org.apache.hadoop.mapreduce.InputFormat;
 
 //Apache Spark imports
-import org.apache.spark.api.java.*;
+//import org.apache.spark.api.java.*;
 import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.function.Function;
+//import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.JavaPairRDD;
+//import org.apache.spark.api.java.function.Function;
+//import org.apache.spark.rdd.HadoopRDD;
 
 /**
  * This is very simple and straightforward implementation of spark based
@@ -98,7 +105,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
    * on engine initialization and cloned during each new submission creation.
    */
   private transient Configuration globalConfiguration;
-  private transient JobConf jobConf;
+  //private transient JobConf jobConf;
 
   //private static final java.io.ObjectStreamField[] serialPersistentFields =  {
       //new ObjectStreamField("globalConfiguration", org.apache.hadoop.conf.Configuration.class) };
@@ -147,7 +154,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
     // Create jobConf object to be used for creating the RDD from InputFormat
     //try {
-      jobConf = new JobConf(globalConfiguration);
+      //jobConf = new JobConf(globalConfiguration);
       //jobClient = new JobClient(new JobConf(globalConfiguration));
     //} catch (IOException e) {
       //throw new SqoopException(SparkSubmissionError.SPARK_0002, e);
@@ -181,13 +188,16 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   @Override
   public boolean submit(JobRequest mrJobRequest) {
 
-    SparkConf sparkJobConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
-    JavaSparkContext sparkJavaContext = new JavaSparkContext(sparkJobConf);
+    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
+    JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
+    JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
+        SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
 
     //Test stub
+    /*
     String logFile = "/Users/banmeet.singh/spark-1.3.1-bin-cdh4/README.md"; // Should be some file on your system
-    JavaRDD<String> logData = sparkJavaContext.textFile(logFile).cache();
+    JavaRDD<String> logData = sc.textFile(logFile).cache();
 
     long numAs = logData.filter(new Function<String, Boolean>() {
       public Boolean call(String s) { return s.contains("a"); }
@@ -198,6 +208,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     }).count();
 
     LOG.info("Lines with a: " + numAs + ", lines with b: " + numBs);
+    */
 
     return true;
   }

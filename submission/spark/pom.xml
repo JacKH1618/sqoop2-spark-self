@@ -36,6 +36,11 @@ limitations under the License.
 
     <dependency>
       <groupId>org.apache.sqoop.execution</groupId>
+      <artifactId>sqoop-execution-mapreduce</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.sqoop.execution</groupId>
       <artifactId>sqoop-execution-spark</artifactId>
     </dependency>
 
