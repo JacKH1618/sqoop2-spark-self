@@ -26,12 +26,14 @@ import org.apache.sqoop.connector.idf.CSVIntermediateDataFormat;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.job.etl.*;
 import org.apache.sqoop.job.etl.Partitioner;
-import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
-import org.apache.sqoop.job.mr.*;
+import org.apache.sqoop.job.mr.SqoopInputFormat;
+import org.apache.sqoop.job.mr.SqoopMapper;
+import org.apache.sqoop.job.mr.SqoopNullOutputFormat;
 import org.apache.sqoop.job.util.MRJobTestUtil;
 import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.mapredsparkcommon.SqoopSplit;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.testng.annotations.Test;
 
 import java.io.DataInput;
@@ -40,7 +42,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.Assert.assertEquals;
+
 
 public class TestMapReduce {
 
@@ -84,7 +87,7 @@ public class TestMapReduce {
                                       SqoopInputFormat.class,
                                       SqoopMapper.class,
                                       DummyOutputFormat.class);
-    assertEquals("Job failed!", true, success);
+    assertEquals(true, success, "Job failed!");
   }
 
   @Test
@@ -106,7 +109,7 @@ public class TestMapReduce {
                                      SqoopInputFormat.class,
                                      SqoopMapper.class,
                                      SqoopNullOutputFormat.class);
-    assertEquals("Job failed!", true, success);
+    assertEquals(true, success, "Job failed!");
 
     // Make sure both destroyers get called.
     assertEquals(1, DummyFromDestroyer.count);

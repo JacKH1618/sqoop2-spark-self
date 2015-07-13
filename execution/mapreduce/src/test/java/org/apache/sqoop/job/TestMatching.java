@@ -28,12 +28,12 @@ import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.job.etl.*;
 import org.apache.sqoop.job.etl.Partitioner;
-import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
-import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopInputFormat;
 import org.apache.sqoop.job.mr.SqoopMapper;
 import org.apache.sqoop.job.util.MRJobTestUtil;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.schema.NullSchema;
 import org.apache.sqoop.schema.Schema;
 import org.apache.sqoop.schema.type.FixedPoint;
@@ -52,8 +52,8 @@ import java.util.List;
 
 import static org.apache.sqoop.connector.common.SqoopIDFUtils.BYTE_FIELD_CHARSET;
 import static org.apache.sqoop.connector.common.SqoopIDFUtils.toText;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
+import static org.testng.Assert.assertEquals;
+
 
 
 public class TestMatching {
@@ -135,17 +135,17 @@ public class TestMatching {
         DummyOutputFormat.class);
     if (from.getName().split("-")[1].equals("EMPTY")) {
       if (to.getName().split("-")[1].equals("EMPTY")) {
-        assertEquals("Job succeeded!", false, success);
+        assertEquals(false, success, "Job succeeded!");
       } else {
-        assertEquals("Job failed!", true, success);
+        assertEquals(true, success, "Job failed!");
       }
     } else {
       if (to.getName().split("-")[1].equals("EMPTY")) {
-        assertEquals("Job failed!", true, success);
+        assertEquals(true, success, "Job failed!");
       } else if (from.getName().split("-")[1].equals(to.getName().split("-")[1])) {
-        assertEquals("Job failed!", true, success);
+        assertEquals(true, success, "Job failed!");
       } else {
-        assertEquals("Job succeeded!", false, success);
+        assertEquals(false, success, "Job succeeded!");
       }
     }
   }
@@ -169,7 +169,7 @@ public class TestMatching {
     Object[] validateObj = dataFormat.getObjectData();
 
     assertEquals(testData, validateCSV);
-    assertArrayEquals(testObject, validateObj);
+    assertEquals(testObject, validateObj);
 
     // Setting data as Object
     dataFormat.setObjectData(testObject);
@@ -178,7 +178,7 @@ public class TestMatching {
     validateObj = dataFormat.getObjectData();
 
     assertEquals(testData, validateCSV);
-    assertArrayEquals(testObjectCopy, validateObj);
+    assertEquals(testObjectCopy, validateObj);
   }
 
   public static class DummyPartition extends Partition {
