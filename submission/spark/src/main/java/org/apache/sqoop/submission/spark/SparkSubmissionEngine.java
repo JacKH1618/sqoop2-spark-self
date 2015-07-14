@@ -194,6 +194,8 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
         SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
 
+    scala.Tuple2<SqoopSplit,NullWritable> testFirstTuple = InitRDD.first();
+
     //Test stub
     /*
     String logFile = "/Users/banmeet.singh/spark-1.3.1-bin-cdh4/README.md"; // Should be some file on your system
