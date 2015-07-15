@@ -20,6 +20,7 @@ package org.apache.sqoop.job.mr;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -31,9 +32,9 @@ import org.apache.sqoop.utils.ClassUtils;
 /**
  * An input split to be read.
  */
-public class SqoopSplit extends InputSplit implements Writable {
+public class SqoopSplit extends InputSplit implements Writable, Serializable {
 
-  private Partition partition;
+  private transient Partition partition;
 
   public void setPartition(Partition partition) {
     this.partition = partition;

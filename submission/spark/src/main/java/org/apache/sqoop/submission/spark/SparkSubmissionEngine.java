@@ -62,10 +62,17 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.Integer;
 import java.net.MalformedURLException;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.driver.SubmissionEngine;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.driver.JobRequest;
+import org.apache.sqoop.execution.mapreduce.MRJobRequest;
+import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.job.mr.MRConfigurationUtils;
 import org.apache.sqoop.model.MSubmission;
 //import org.apache.sqoop.execution.spark.SparkExecutionEngine;
 import org.apache.log4j.Logger;
@@ -87,6 +94,7 @@ import org.apache.spark.SparkConf;
 //import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.sqoop.model.SubmissionError;
 //import org.apache.spark.api.java.function.Function;
 //import org.apache.spark.rdd.HadoopRDD;
 
@@ -108,7 +116,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   //private transient JobConf jobConf;
 
   //private static final java.io.ObjectStreamField[] serialPersistentFields =  {
-      //new ObjectStreamField("globalConfiguration", org.apache.hadoop.conf.Configuration.class) };
+  //new ObjectStreamField("globalConfiguration", org.apache.hadoop.conf.Configuration.class) };
 
   /**
    * {@inheritDoc}
@@ -154,10 +162,10 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
     // Create jobConf object to be used for creating the RDD from InputFormat
     //try {
-      //jobConf = new JobConf(globalConfiguration);
-      //jobClient = new JobClient(new JobConf(globalConfiguration));
+    //jobConf = new JobConf(globalConfiguration);
+    //jobClient = new JobClient(new JobConf(globalConfiguration));
     //} catch (IOException e) {
-      //throw new SqoopException(SparkSubmissionError.SPARK_0002, e);
+    //throw new SqoopException(SparkSubmissionError.SPARK_0002, e);
     //}
 
     //if(isLocal()) {
@@ -188,15 +196,121 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   @Override
   public boolean submit(JobRequest mrJobRequest) {
 
+    //Move this to initialize()
     SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
     JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-    JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
-        SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
+    //This additional setting up of configuration is to be done on each submission
+    //(as in the MR engine)
+    MRJobRequest request = (MRJobRequest) mrJobRequest;
 
-    scala.Tuple2<SqoopSplit,NullWritable> testFirstTuple = InitRDD.first();
+    // Clone global configuration
+    Configuration configuration = new Configuration(globalConfiguration);
 
-    //Test stub
+    // Serialize driver context into job configuration
+    for(Map.Entry<String, String> entry: request.getDriverContext()) {
+      if (entry.getValue() == null) {
+        LOG.warn("Ignoring null driver context value for key " + entry.getKey());
+        continue;
+      }
+      configuration.set(entry.getKey(), entry.getValue());
+    }
+
+    // Serialize connector context as a sub namespace
+    for(Map.Entry<String, String> entry : request.getConnectorContext(Direction.FROM)) {
+      if (entry.getValue() == null) {
+        LOG.warn("Ignoring null connector context value for key " + entry.getKey());
+        continue;
+      }
+      configuration.set(
+          MRJobConstants.PREFIX_CONNECTOR_FROM_CONTEXT + entry.getKey(),
+          entry.getValue());
+    }
+
+    for(Map.Entry<String, String> entry : request.getConnectorContext(Direction.TO)) {
+      if (entry.getValue() == null) {
+        LOG.warn("Ignoring null connector context value for key " + entry.getKey());
+        continue;
+      }
+      configuration.set(
+          MRJobConstants.PREFIX_CONNECTOR_TO_CONTEXT + entry.getKey(),
+          entry.getValue());
+    }
+
+    // Set up notification URL if it's available
+    if(request.getNotificationUrl() != null) {
+      configuration.set("job.end.notification.url", request.getNotificationUrl());
+    }
+
+    // Turn off speculative execution
+    configuration.setBoolean("mapred.map.tasks.speculative.execution", false);
+    configuration.setBoolean("mapred.reduce.tasks.speculative.execution", false);
+
+    // Promote all required jars to the job
+    configuration.set("tmpjars", StringUtils.join(request.getJars(), ","));
+
+    try {
+      Job job = new Job(configuration);
+
+      // link configs
+      MRConfigurationUtils.setConnectorLinkConfig(Direction.FROM, job, request.getConnectorLinkConfig(Direction.FROM));
+      MRConfigurationUtils.setConnectorLinkConfig(Direction.TO, job, request.getConnectorLinkConfig(Direction.TO));
+
+      // from and to configs
+      MRConfigurationUtils.setConnectorJobConfig(Direction.FROM, job, request.getJobConfig(Direction.FROM));
+      MRConfigurationUtils.setConnectorJobConfig(Direction.TO, job, request.getJobConfig(Direction.TO));
+
+      MRConfigurationUtils.setDriverConfig(job, request.getDriverConfig());
+      MRConfigurationUtils.setConnectorSchema(Direction.FROM, job, request.getJobSubmission().getFromSchema());
+      MRConfigurationUtils.setConnectorSchema(Direction.TO, job, request.getJobSubmission().getToSchema());
+
+      if (request.getJobName() != null) {
+        job.setJobName("Sqoop: " + request.getJobName());
+      } else {
+        job.setJobName("Sqoop job with id: " + request.getJobId());
+      }
+
+      job.setInputFormatClass(request.getInputFormatClass());
+
+      job.setMapperClass(request.getMapperClass());
+      job.setMapOutputKeyClass(request.getMapOutputKeyClass());
+      job.setMapOutputValueClass(request.getMapOutputValueClass());
+
+      // Set number of reducers as number of configured loaders  or suppress
+      // reduce phase entirely if loaders are not set at all.
+      if (request.getLoaders() != null) {
+        job.setNumReduceTasks(request.getLoaders());
+      } else {
+        job.setNumReduceTasks(0);
+      }
+
+      job.setOutputFormatClass(request.getOutputFormatClass());
+      job.setOutputKeyClass(request.getOutputKeyClass());
+      job.setOutputValueClass(request.getOutputValueClass());
+
+
+      //JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
+          //SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
+
+      JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
+          SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
+
+      scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = InitRDD.first();
+
+    } catch (Exception e) {
+      SubmissionError error = new SubmissionError();
+      error.setErrorSummary(e.toString());
+      StringWriter writer = new StringWriter();
+      e.printStackTrace(new PrintWriter(writer));
+      writer.flush();
+      error.setErrorDetails(writer.toString());
+
+      request.getJobSubmission().setError(error);
+      LOG.error("Error in submitting job", e);
+      return false;
+    }
+
+      //Test stub
     /*
     String logFile = "/Users/banmeet.singh/spark-1.3.1-bin-cdh4/README.md"; // Should be some file on your system
     JavaRDD<String> logData = sc.textFile(logFile).cache();
@@ -212,26 +326,26 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     LOG.info("Lines with a: " + numAs + ", lines with b: " + numBs);
     */
 
-    return true;
+      return true;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stop(String externalJobId) {
+
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(MSubmission submission) {
+
+    }
+
+
   }
-
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void stop(String externalJobId) {
-
-  }
-
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void update(MSubmission submission) {
-
-  }
-
-
-}
