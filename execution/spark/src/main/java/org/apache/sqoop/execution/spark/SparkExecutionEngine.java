@@ -17,18 +17,18 @@
  */
 package org.apache.sqoop.execution.spark;
 
-//import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.MutableMapContext;
 import org.apache.sqoop.driver.ExecutionEngine;
 import org.apache.sqoop.driver.JobRequest;
-//import org.apache.sqoop.job.MRJobConstants;
-//import org.apache.sqoop.job.etl.From;
-//import org.apache.sqoop.job.etl.To;
-//import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.job.etl.From;
+import org.apache.sqoop.job.etl.To;
+import org.apache.sqoop.job.io.SqoopWritable;
 //import org.apache.sqoop.job.mr.SqoopInputFormat;
 //import org.apache.sqoop.job.mr.SqoopMapper;
-//import org.apache.sqoop.job.mr.SqoopNullOutputFormat;
+import org.apache.sqoop.job.mr.SqoopNullOutputFormat;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -46,40 +46,39 @@ public class SparkExecutionEngine extends ExecutionEngine {
   }
 
   public void prepareJob(JobRequest jobRequest) {
-    /*
-    MRJobRequest mrJobRequest = (MRJobRequest)jobRequest;
+
+    SparkJobRequest sparkJobRequest = (SparkJobRequest)jobRequest;
 
     // Add jar dependencies
-    addDependencies(mrJobRequest);
+    addDependencies(sparkJobRequest);
 
-    // Configure map-reduce classes for import
-    mrJobRequest.setInputFormatClass(SqoopInputFormat.class);
+    // Configure classes for import
+    sparkJobRequest.setInputFormatClass(SqoopInputFormatSpark.class);
 
-    mrJobRequest.setMapperClass(SqoopMapper.class);
-    mrJobRequest.setMapOutputKeyClass(SqoopWritable.class);
-    mrJobRequest.setMapOutputValueClass(NullWritable.class);
+    //sparkJobRequest.setMapperClass(SqoopMapper.class);
+    //sparkJobRequest.setMapOutputKeyClass(SqoopWritable.class);
+    //sparkJobRequest.setMapOutputValueClass(NullWritable.class);
 
-    mrJobRequest.setOutputFormatClass(SqoopNullOutputFormat.class);
-    mrJobRequest.setOutputKeyClass(SqoopWritable.class);
-    mrJobRequest.setOutputValueClass(NullWritable.class);
+    sparkJobRequest.setOutputFormatClass(SqoopNullOutputFormat.class);
+    sparkJobRequest.setOutputKeyClass(SqoopWritable.class);
+    sparkJobRequest.setOutputValueClass(NullWritable.class);
 
-    From from = (From) mrJobRequest.getFrom();
-    To to = (To) mrJobRequest.getTo();
-    MutableMapContext context = mrJobRequest.getDriverContext();
+    From from = (From) sparkJobRequest.getFrom();
+    To to = (To) sparkJobRequest.getTo();
+    MutableMapContext context = sparkJobRequest.getDriverContext();
     context.setString(MRJobConstants.JOB_ETL_PARTITIONER, from.getPartitioner().getName());
     context.setString(MRJobConstants.JOB_ETL_EXTRACTOR, from.getExtractor().getName());
     context.setString(MRJobConstants.JOB_ETL_LOADER, to.getLoader().getName());
     context.setString(MRJobConstants.JOB_ETL_FROM_DESTROYER, from.getDestroyer().getName());
     context.setString(MRJobConstants.JOB_ETL_TO_DESTROYER, to.getDestroyer().getName());
     context.setString(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT,
-        mrJobRequest.getIntermediateDataFormat(Direction.FROM).getName());
+        sparkJobRequest.getIntermediateDataFormat(Direction.FROM).getName());
     context.setString(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT,
-        mrJobRequest.getIntermediateDataFormat(Direction.TO).getName());
+        sparkJobRequest.getIntermediateDataFormat(Direction.TO).getName());
 
-    if(mrJobRequest.getExtractors() != null) {
-      context.setInteger(MRJobConstants.JOB_ETL_EXTRACTOR_NUM, mrJobRequest.getExtractors());
+    if(sparkJobRequest.getExtractors() != null) {
+      context.setInteger(MRJobConstants.JOB_ETL_EXTRACTOR_NUM, sparkJobRequest.getExtractors());
     }
-    */
   }
 
 

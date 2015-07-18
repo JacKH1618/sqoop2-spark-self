@@ -32,9 +32,9 @@ import org.apache.sqoop.utils.ClassUtils;
 /**
  * An input split to be read.
  */
-public class SqoopSplit extends InputSplit implements Writable, Serializable {
+public class SqoopSplit extends InputSplit implements Writable/*, Serializable*/ {
 
-  private transient Partition partition;
+  private /*transient*/ Partition partition;
 
   public void setPartition(Partition partition) {
     this.partition = partition;

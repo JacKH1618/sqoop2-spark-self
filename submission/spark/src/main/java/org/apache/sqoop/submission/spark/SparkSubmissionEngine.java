@@ -66,6 +66,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.spark.api.java.function.Function;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.driver.SubmissionEngine;
 import org.apache.sqoop.common.MapContext;
@@ -74,12 +75,14 @@ import org.apache.sqoop.execution.mapreduce.MRJobRequest;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.mr.MRConfigurationUtils;
 import org.apache.sqoop.model.MSubmission;
-//import org.apache.sqoop.execution.spark.SparkExecutionEngine;
+import org.apache.sqoop.execution.spark.SparkExecutionEngine;
+import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
+import org.apache.sqoop.execution.spark.SparkJobRequest;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.error.code.SparkSubmissionError;
 import org.apache.sqoop.common.SqoopException;
-import org.apache.sqoop.job.mr.SqoopInputFormat;
+//import org.apache.sqoop.job.mr.SqoopInputFormat;
 import org.apache.sqoop.job.mr.SqoopSplit;
 
 //Hadoop imports
@@ -95,6 +98,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.sqoop.model.SubmissionError;
+import scala.Tuple2;
 //import org.apache.spark.api.java.function.Function;
 //import org.apache.spark.rdd.HadoopRDD;
 
@@ -186,15 +190,15 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
    */
   @Override
   public boolean isExecutionEngineSupported(Class<?> executionEngineClass) {
-    //return executionEngineClass == SparkExecutionEngine.class;
-    return true;
+    return executionEngineClass == SparkExecutionEngine.class;
+    //return true;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public boolean submit(JobRequest mrJobRequest) {
+  public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
     SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
@@ -202,7 +206,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
     //This additional setting up of configuration is to be done on each submission
     //(as in the MR engine)
-    MRJobRequest request = (MRJobRequest) mrJobRequest;
+    SparkJobRequest request = (SparkJobRequest) sparkJobRequest;
 
     // Clone global configuration
     Configuration configuration = new Configuration(globalConfiguration);
@@ -272,9 +276,9 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
       job.setInputFormatClass(request.getInputFormatClass());
 
-      job.setMapperClass(request.getMapperClass());
-      job.setMapOutputKeyClass(request.getMapOutputKeyClass());
-      job.setMapOutputValueClass(request.getMapOutputValueClass());
+      //job.setMapperClass(request.getMapperClass());
+      //job.setMapOutputKeyClass(request.getMapOutputKeyClass());
+      //job.setMapOutputValueClass(request.getMapOutputValueClass());
 
       // Set number of reducers as number of configured loaders  or suppress
       // reduce phase entirely if loaders are not set at all.
@@ -290,12 +294,25 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
 
       //JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
-          //SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
+          //SqoopInputFormatSpark.class, SqoopSplit.class, NullWritable.class);
 
-      JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
-          SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
+      JavaPairRDD<SqoopSplit, SqoopSplit> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
+          SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
 
-      scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = InitRDD.first();
+      //scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = InitRDD.first();
+      InitRDD.map(new Function<Tuple2<SqoopSplit,SqoopSplit>, Object>() {
+        @Override
+        public Object call(Tuple2<SqoopSplit, SqoopSplit> tuple) throws Exception {
+          //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
+          int i=1;
+          i++;
+          return null;
+        }
+      });
+
+      //Trigger the transformation
+      InitRDD.first();
+
 
     } catch (Exception e) {
       SubmissionError error = new SubmissionError();

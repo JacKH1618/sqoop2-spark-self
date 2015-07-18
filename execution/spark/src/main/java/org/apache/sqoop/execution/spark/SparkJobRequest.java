@@ -30,9 +30,50 @@ import org.apache.sqoop.driver.JobRequest;
  */
 public class SparkJobRequest extends JobRequest {
 
+  /**
+   * Options relevant to Spark
+   */
+  Class<? extends InputFormat> inputFormatClass;
+  //Class<? extends Mapper> mapperClass;
+  //Class<? extends Writable> mapOutputKeyClass;
+  //Class<? extends Writable> mapOutputValueClass;
+  Class<? extends OutputFormat> outputFormatClass;
+  Class<? extends Writable> outputKeyClass;
+  Class<? extends Writable> outputValueClass;
 
   public SparkJobRequest() {
     super();
   }
 
+  public Class<? extends InputFormat> getInputFormatClass() {
+    return inputFormatClass;
+  }
+
+  public void setInputFormatClass(Class<? extends InputFormat> inputFormatClass) {
+    this.inputFormatClass = inputFormatClass;
+  }
+
+  public Class<? extends OutputFormat> getOutputFormatClass() {
+    return outputFormatClass;
+  }
+
+  public void setOutputFormatClass(Class<? extends OutputFormat> outputFormatClass) {
+    this.outputFormatClass = outputFormatClass;
+  }
+
+  public Class<? extends Writable> getOutputKeyClass() {
+    return outputKeyClass;
+  }
+
+  public void setOutputKeyClass(Class<? extends Writable> outputKeyClass) {
+    this.outputKeyClass = outputKeyClass;
+  }
+
+  public Class<? extends Writable> getOutputValueClass() {
+    return outputValueClass;
+  }
+
+  public void setOutputValueClass(Class<? extends Writable> outputValueClass) {
+    this.outputValueClass = outputValueClass;
+  }
 }
