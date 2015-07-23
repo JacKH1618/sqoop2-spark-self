@@ -34,9 +34,9 @@ public class SparkJobRequest extends JobRequest {
    * Options relevant to Spark
    */
   Class<? extends InputFormat> inputFormatClass;
-  //Class<? extends Mapper> mapperClass;
-  //Class<? extends Writable> mapOutputKeyClass;
-  //Class<? extends Writable> mapOutputValueClass;
+  Class<? extends Mapper> mapperClass;
+  Class<? extends Writable> mapOutputKeyClass;
+  Class<? extends Writable> mapOutputValueClass;
   Class<? extends OutputFormat> outputFormatClass;
   Class<? extends Writable> outputKeyClass;
   Class<? extends Writable> outputValueClass;
@@ -51,6 +51,30 @@ public class SparkJobRequest extends JobRequest {
 
   public void setInputFormatClass(Class<? extends InputFormat> inputFormatClass) {
     this.inputFormatClass = inputFormatClass;
+  }
+
+  public Class<? extends Mapper> getMapperClass() {
+    return mapperClass;
+  }
+
+  public void setMapperClass(Class<? extends Mapper> mapperClass) {
+    this.mapperClass = mapperClass;
+  }
+
+  public Class<? extends Writable> getMapOutputKeyClass() {
+    return mapOutputKeyClass;
+  }
+
+  public void setMapOutputKeyClass(Class<? extends Writable> mapOutputKeyClass) {
+    this.mapOutputKeyClass = mapOutputKeyClass;
+  }
+
+  public Class<? extends Writable> getMapOutputValueClass() {
+    return mapOutputValueClass;
+  }
+
+  public void setMapOutputValueClass(Class<? extends Writable> mapOutputValueClass) {
+    this.mapOutputValueClass = mapOutputValueClass;
   }
 
   public Class<? extends OutputFormat> getOutputFormatClass() {

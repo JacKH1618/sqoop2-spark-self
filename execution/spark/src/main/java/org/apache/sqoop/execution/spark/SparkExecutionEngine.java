@@ -28,6 +28,8 @@ import org.apache.sqoop.job.etl.To;
 import org.apache.sqoop.job.io.SqoopWritable;
 //import org.apache.sqoop.job.mr.SqoopInputFormat;
 //import org.apache.sqoop.job.mr.SqoopMapper;
+import org.apache.sqoop.job.mr.SqoopInputFormat;
+import org.apache.sqoop.job.mr.SqoopMapper;
 import org.apache.sqoop.job.mr.SqoopNullOutputFormat;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -53,11 +55,12 @@ public class SparkExecutionEngine extends ExecutionEngine {
     addDependencies(sparkJobRequest);
 
     // Configure classes for import
-    sparkJobRequest.setInputFormatClass(SqoopInputFormatSpark.class);
+    //sparkJobRequest.setInputFormatClass(SqoopInputFormatSpark.class);
+    sparkJobRequest.setInputFormatClass(SqoopInputFormat.class);
 
-    //sparkJobRequest.setMapperClass(SqoopMapper.class);
-    //sparkJobRequest.setMapOutputKeyClass(SqoopWritable.class);
-    //sparkJobRequest.setMapOutputValueClass(NullWritable.class);
+    sparkJobRequest.setMapperClass(SqoopMapper.class);
+    sparkJobRequest.setMapOutputKeyClass(SqoopWritable.class);
+    sparkJobRequest.setMapOutputValueClass(NullWritable.class);
 
     sparkJobRequest.setOutputFormatClass(SqoopNullOutputFormat.class);
     sparkJobRequest.setOutputKeyClass(SqoopWritable.class);

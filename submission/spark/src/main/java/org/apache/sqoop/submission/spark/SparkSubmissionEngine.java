@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sqoop.submission.spark;
+package org.apache.sqoop.submission.spark.engine;
 
 /*
 import java.io.File;
@@ -67,6 +67,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.driver.SubmissionEngine;
 import org.apache.sqoop.common.MapContext;
@@ -74,9 +75,10 @@ import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.execution.mapreduce.MRJobRequest;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.mr.MRConfigurationUtils;
+import org.apache.sqoop.job.mr.SqoopInputFormat;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.execution.spark.SparkExecutionEngine;
-import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
+//import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
 import org.apache.sqoop.execution.spark.SparkJobRequest;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.MapContext;
@@ -201,7 +203,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
-    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
+    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
     JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
     //This additional setting up of configuration is to be done on each submission
@@ -247,8 +249,8 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     }
 
     // Turn off speculative execution
-    configuration.setBoolean("mapred.map.tasks.speculative.execution", false);
-    configuration.setBoolean("mapred.reduce.tasks.speculative.execution", false);
+    //configuration.setBoolean("mapred.map.tasks.speculative.execution", false);
+    //configuration.setBoolean("mapred.reduce.tasks.speculative.execution", false);
 
     // Promote all required jars to the job
     configuration.set("tmpjars", StringUtils.join(request.getJars(), ","));
@@ -276,9 +278,9 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
       job.setInputFormatClass(request.getInputFormatClass());
 
-      //job.setMapperClass(request.getMapperClass());
-      //job.setMapOutputKeyClass(request.getMapOutputKeyClass());
-      //job.setMapOutputValueClass(request.getMapOutputValueClass());
+      job.setMapperClass(request.getMapperClass());
+      job.setMapOutputKeyClass(request.getMapOutputKeyClass());
+      job.setMapOutputValueClass(request.getMapOutputValueClass());
 
       // Set number of reducers as number of configured loaders  or suppress
       // reduce phase entirely if loaders are not set at all.
@@ -296,22 +298,54 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
       //JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
           //SqoopInputFormatSpark.class, SqoopSplit.class, NullWritable.class);
 
-      JavaPairRDD<SqoopSplit, SqoopSplit> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
-          SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
+      //JavaPairRDD<SqoopSplit, SqoopSplit> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
+          //SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
+
+      JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
+          SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
 
       //scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = InitRDD.first();
+      /*
       InitRDD.map(new Function<Tuple2<SqoopSplit,SqoopSplit>, Object>() {
         @Override
         public Object call(Tuple2<SqoopSplit, SqoopSplit> tuple) throws Exception {
           //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
           int i=1;
           i++;
+          LOG.info("Inside the Spark map() API");
+          LOG.debug("Inside the Spark map() API");
           return null;
         }
       });
+      */
 
-      //Trigger the transformation
-      InitRDD.first();
+      /*
+      InitRDD.mapValues(new Function<SqoopSplit, Object>() {
+        @Override
+        public Object call(SqoopSplit sqoopSplit) throws Exception {
+          return null;
+        }
+      });
+      */
+
+      //InitRDD.mapValues(new SqoopMapperSpark());
+
+      InitRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
+
+      //Trigger the transformation - stub
+      //InitRDD.first();
+
+      //Trigger the map() using reduceByKey()
+      /*
+      InitRDD.reduceByKey(new Function2<SqoopSplit, SqoopSplit, SqoopSplit>() {
+        @Override
+        public SqoopSplit call(SqoopSplit sqoopSplit, SqoopSplit sqoopSplit2) throws Exception {
+          LOG.info("Inside the Spark reduceByKey() API");
+          LOG.debug("Inside the Spark reduceByKey() API");
+          return null;
+        }
+      });
+      */
 
 
     } catch (Exception e) {
@@ -327,7 +361,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
       return false;
     }
 
-      //Test stub
+    //Test stub
     /*
     String logFile = "/Users/banmeet.singh/spark-1.3.1-bin-cdh4/README.md"; // Should be some file on your system
     JavaRDD<String> logData = sc.textFile(logFile).cache();
@@ -343,7 +377,9 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     LOG.info("Lines with a: " + numAs + ", lines with b: " + numBs);
     */
 
-      return true;
+    sc.stop();
+
+    return true;
     }
 
 
