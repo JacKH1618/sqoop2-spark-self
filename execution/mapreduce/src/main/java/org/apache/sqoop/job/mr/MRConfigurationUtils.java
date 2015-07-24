@@ -42,11 +42,27 @@ public final class MRConfigurationUtils {
 
   private static final String MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.from.link";
 
+  private static final String MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_NAME = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.from.link.name";
+
+  private static final String MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_OBJ = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.from.link.obj";
+
   private static final String MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.to.link";
+
+  private static final String MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_NAME = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.to.link.name";
+
+  private static final String MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_OBJ = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.to.link.obj";
 
   private static final String MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.from.job";
 
+  private static final String MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.from.job.name";
+
+  private static final String MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.from.job.obj";
+
   private static final String MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.to.job";
+
+  private static final String MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB_NAME = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.to.job.name";
+
+  private static final String MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB_OBJ = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.connector.to.job.obj";
 
   private static final String MR_JOB_CONFIG_DRIVER_CONFIG_CLASS = MRJobConstants.PREFIX_JOB_CONFIG + "config.class.driver";
 
@@ -100,6 +116,27 @@ public final class MRConfigurationUtils {
   }
 
   /**
+   * Persist Connector configuration object for link directly in the Mapreduce Configuration object
+   * instead of the Hadoop credentials store
+   *
+   * @param conf MapReduce configuration object
+   * @param obj Link configuration object
+   */
+  public static void setConnectorLinkConfigUnsafe(Direction type, Configuration conf, Object obj) {
+    switch (type) {
+      case FROM:
+        conf.set(MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_NAME, obj.getClass().getName());
+        conf.set(MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_OBJ, ConfigUtils.toJson(obj));
+        break;
+
+      case TO:
+        conf.set(MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_NAME, obj.getClass().getName());
+        conf.set(MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_OBJ, ConfigUtils.toJson(obj));
+        break;
+    }
+  }
+
+  /**
    * Persist Connector configuration objects for job.
    *
    * @param job MapReduce job object
@@ -115,6 +152,27 @@ public final class MRConfigurationUtils {
       case TO:
         job.getConfiguration().set(MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB, obj.getClass().getName());
         job.getCredentials().addSecretKey(MR_JOB_CONFIG_TO_JOB_CONFIG_KEY, ConfigUtils.toJson(obj).getBytes());
+        break;
+    }
+  }
+
+  /**
+   * Persist Connector configuration objects for job directly in the Mapreduce Configuration object
+   * instead of the Hadoop credentials store
+   *
+   * @param conf MapReduce job object
+   * @param obj Configuration object
+   */
+  public static void setConnectorJobConfigUnsafe(Direction type, Configuration conf, Object obj) {
+    switch (type) {
+      case FROM:
+        conf.set(MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, obj.getClass().getName());
+        conf.set(MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ, ConfigUtils.toJson(obj));
+        break;
+
+      case TO:
+        conf.set(MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB_NAME, obj.getClass().getName());
+        conf.set(MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB_OBJ, ConfigUtils.toJson(obj));
         break;
     }
   }
@@ -151,6 +209,28 @@ public final class MRConfigurationUtils {
   }
 
   /**
+   * Persist Connector generated schema directly in the Configuration object
+   * instead of putting into the Hadoop credentials store
+   *
+   * @param type  Direction of schema we are persisting
+   * @param conf  Configuration object
+   * @param schema Schema
+   */
+  public static void setConnectorSchemaUnsafe(Direction type, Configuration conf, Schema schema) {
+    String jsonSchema =  SchemaSerialization.extractSchema(schema).toJSONString();
+    switch (type) {
+      case FROM:
+        //job.getCredentials().addSecretKey(SCHEMA_FROM_KEY,jsonSchema.getBytes());
+        conf.set(SCHEMA_FROM,jsonSchema);
+        return;
+      case TO:
+        //job.getCredentials().addSecretKey(SCHEMA_TO_KEY, jsonSchema.getBytes());
+        conf.set(SCHEMA_TO,jsonSchema);
+        return;
+    }
+  }
+
+  /**
    * Retrieve Connector configuration object for link.
    * @param configuration MapReduce configuration object
    * @return Configuration object
@@ -162,6 +242,43 @@ public final class MRConfigurationUtils {
 
       case TO:
         return loadConfiguration((JobConf) configuration, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK, MR_JOB_CONFIG_TO_CONNECTOR_LINK_KEY);
+    }
+
+    return null;
+  }
+
+  /**
+   * Retrieve Connector configuration object for link using the Mapreduce configuration object instead of the
+   * Hadoop credentials store
+   * @param configuration MapReduce configuration object
+   * @return Configuration object
+   */
+  public static Object getConnectorLinkConfigUnsafe(Direction type, Configuration configuration) {
+    switch (type) {
+      case FROM:
+        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_OBJ);
+
+      case TO:
+        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_NAME, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_OBJ);
+    }
+
+    return null;
+  }
+
+  /**
+   * Retrieve Connector configuration object for job using the Mapreduce configuration object instead of the
+   * Hadoop credentials store
+   *
+   * @param configuration MapReduce configuration object
+   * @return Configuration object
+   */
+  public static Object getConnectorJobConfigUnsafe(Direction type, Configuration configuration) {
+    switch (type) {
+      case FROM:
+        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
+
+      case TO:
+        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
     }
 
     return null;
@@ -216,6 +333,25 @@ public final class MRConfigurationUtils {
   }
 
   /**
+   * Retrieve Connector generated schema directly from the Configuration object instead of the Hadoop
+   * credentials store
+   *
+   * @param type The FROM or TO connector
+   * @param configuration MapReduce configuration object
+   */
+  public static Schema getConnectorSchemaUnsafe(Direction type, Configuration configuration) {
+    switch (type) {
+      case FROM:
+        return getSchemaFromString(configuration.get(SCHEMA_FROM));
+
+      case TO:
+        return getSchemaFromString(configuration.get(SCHEMA_TO));
+    }
+
+    return null;
+  }
+
+  /**
    * Deserialize schema from JSON encoded bytes.
    *
    * This method is null safe.
@@ -229,6 +365,23 @@ public final class MRConfigurationUtils {
     }
 
     JSONObject jsonSchema = JSONUtils.parse(new String(bytes));
+    return SchemaSerialization.restoreSchema(jsonSchema);
+  }
+
+  /**
+   * Deserialize schema from JSON encoded string.
+   *
+   * This method is null safe.
+   *
+   * @param jsonString
+   * @return
+   */
+  private static Schema getSchemaFromString(String jsonString) {
+    if(jsonString == null) {
+      return null;
+    }
+
+    JSONObject jsonSchema = JSONUtils.parse(jsonString);
     return SchemaSerialization.restoreSchema(jsonSchema);
   }
 
@@ -249,6 +402,32 @@ public final class MRConfigurationUtils {
     }
 
     String json = new String(configuration.getCredentials().getSecretKey(valueProperty));
+
+    // Fill it with JSON data
+    ConfigUtils.fillValues(json, object);
+
+    // And give it back
+    return object;
+  }
+
+  /**
+   * Load configuration instance stored in the Mapreduce configuration object
+   * instead of the Hadoop credentials cache.
+   *
+   * @param configuration JobConf object associated with the job
+   * @param classProperty Property with stored configuration class name
+   * @param valueProperty Property with stored JSON representation of the
+   *                      configuration object
+   * @return New instance with loaded data
+   */
+  private static Object loadConfigurationUnsafe(JobConf configuration, String classProperty, String valueProperty) {
+    // Create new instance of configuration class
+    Object object = ClassUtils.instantiate(configuration.get(classProperty));
+    if(object == null) {
+      return null;
+    }
+
+    String json = configuration.get(valueProperty);
 
     // Fill it with JSON data
     ConfigUtils.fillValues(json, object);

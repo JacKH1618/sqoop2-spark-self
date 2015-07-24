@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sqoop.submission.spark.engine;
+package org.apache.sqoop.submission.spark;
 
 /*
 import java.io.File;
@@ -258,17 +258,36 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     try {
       Job job = new Job(configuration);
 
-      // link configs
+      // Adding link, job and connector schema configurations to the Mapreduce configuration object instead of the
+      // Hadoop credentials cache. This is because hadoop, for security reasons, does not serialize the credentials
+      // cache for sending over the wire (only the Configuration object is serialized, while the credentials cache
+      // resides in the JobConf object).
+      // Adding this configuration information to the Configuration object and sending over the wire is a security
+      // issue that must be addressed later.
+
+      // from and to link configs
+      MRConfigurationUtils.setConnectorLinkConfigUnsafe(Direction.FROM, job.getConfiguration(), request.getConnectorLinkConfig(Direction.FROM));
+      MRConfigurationUtils.setConnectorLinkConfigUnsafe(Direction.TO, job.getConfiguration(), request.getConnectorLinkConfig(Direction.TO));
+
+      // from and to job configs
+      MRConfigurationUtils.setConnectorJobConfigUnsafe(Direction.FROM, job.getConfiguration(), request.getJobConfig(Direction.FROM));
+      MRConfigurationUtils.setConnectorJobConfigUnsafe(Direction.TO, job.getConfiguration(), request.getJobConfig(Direction.TO));
+
+      // driver config
+      MRConfigurationUtils.setDriverConfig(job, request.getDriverConfig());
+
+      // from and to connector configs
+      MRConfigurationUtils.setConnectorSchemaUnsafe(Direction.FROM, job.getConfiguration(), request.getJobSubmission().getFromSchema());
+      MRConfigurationUtils.setConnectorSchemaUnsafe(Direction.TO, job.getConfiguration(), request.getJobSubmission().getToSchema());
+
+      //Retaining to minimize change to existing functioning code
       MRConfigurationUtils.setConnectorLinkConfig(Direction.FROM, job, request.getConnectorLinkConfig(Direction.FROM));
       MRConfigurationUtils.setConnectorLinkConfig(Direction.TO, job, request.getConnectorLinkConfig(Direction.TO));
-
-      // from and to configs
       MRConfigurationUtils.setConnectorJobConfig(Direction.FROM, job, request.getJobConfig(Direction.FROM));
       MRConfigurationUtils.setConnectorJobConfig(Direction.TO, job, request.getJobConfig(Direction.TO));
-
-      MRConfigurationUtils.setDriverConfig(job, request.getDriverConfig());
       MRConfigurationUtils.setConnectorSchema(Direction.FROM, job, request.getJobSubmission().getFromSchema());
       MRConfigurationUtils.setConnectorSchema(Direction.TO, job, request.getJobSubmission().getToSchema());
+
 
       if (request.getJobName() != null) {
         job.setJobName("Sqoop: " + request.getJobName());

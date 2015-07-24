@@ -75,9 +75,15 @@ public class SqoopOutputFormatLoadExecutor {
     context = jobctx;
     loaderName = context.getConfiguration().get(MRJobConstants.JOB_ETL_LOADER);
     writer = new SqoopRecordWriter();
+    // jackh: This must be conditional - Extract schema using credentials in case of MR and simply extract from the
+    // credentials object in case of Spark (due to known issue with Hadoop/Spark that the credentials are never added
+    // for serialization)
+    //matcher = MatcherFactory.getMatcher(
+        //MRConfigurationUtils.getConnectorSchema(Direction.FROM, context.getConfiguration()),
+        //MRConfigurationUtils.getConnectorSchema(Direction.TO, context.getConfiguration()));
     matcher = MatcherFactory.getMatcher(
-        MRConfigurationUtils.getConnectorSchema(Direction.FROM, context.getConfiguration()),
-        MRConfigurationUtils.getConnectorSchema(Direction.TO, context.getConfiguration()));
+        MRConfigurationUtils.getConnectorSchemaUnsafe(Direction.FROM, context.getConfiguration()),
+        MRConfigurationUtils.getConnectorSchemaUnsafe(Direction.TO, context.getConfiguration()));
     toDataFormat = (IntermediateDataFormat<?>) ClassUtils.instantiate(context
         .getConfiguration().get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT));
     // Using the TO schema since the SqoopDataWriter in the SqoopMapper encapsulates the toDataFormat
@@ -253,9 +259,9 @@ public class SqoopOutputFormatLoadExecutor {
         PrefixContext subContext = new PrefixContext(conf,
             MRJobConstants.PREFIX_CONNECTOR_TO_CONTEXT);
         Object connectorLinkConfig = MRConfigurationUtils
-            .getConnectorLinkConfig(Direction.TO, conf);
+            .getConnectorLinkConfigUnsafe(Direction.TO, conf);
         Object connectorToJobConfig = MRConfigurationUtils
-            .getConnectorJobConfig(Direction.TO, conf);
+            .getConnectorJobConfigUnsafe(Direction.TO, conf);
         // Using the TO schema since the SqoopDataWriter in the SqoopMapper
         // encapsulates the toDataFormat
 
