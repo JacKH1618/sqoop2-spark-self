@@ -58,39 +58,44 @@ import org.apache.sqoop.submission.counter.Counters;
 import java.io.*;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.Serializable;
-import java.lang.Integer;
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.sqoop.common.Direction;
+import org.apache.sqoop.connector.idf.IntermediateDataFormat;
+import org.apache.sqoop.connector.matcher.Matcher;
+import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.driver.SubmissionEngine;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.driver.JobRequest;
-import org.apache.sqoop.execution.mapreduce.MRJobRequest;
+import org.apache.sqoop.error.code.MRExecutionError;
+import org.apache.sqoop.etl.io.DataWriter;
+import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
 import org.apache.sqoop.job.MRJobConstants;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
-import org.apache.sqoop.job.mr.SqoopInputFormat;
+import org.apache.sqoop.job.PrefixContext;
+import org.apache.sqoop.job.etl.Extractor;
+import org.apache.sqoop.job.etl.ExtractorContext;
+import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.job.mr.*;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.execution.spark.SparkExecutionEngine;
 //import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
 import org.apache.sqoop.execution.spark.SparkJobRequest;
 import org.apache.log4j.Logger;
-import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.error.code.SparkSubmissionError;
 import org.apache.sqoop.common.SqoopException;
 //import org.apache.sqoop.job.mr.SqoopInputFormat;
-import org.apache.sqoop.job.mr.SqoopSplit;
 
 //Hadoop imports
 import org.apache.hadoop.conf.Configuration;
 //import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.io.NullWritable;
 //import org.apache.hadoop.mapreduce.InputFormat;
 
 //Apache Spark imports
@@ -100,7 +105,8 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.sqoop.model.SubmissionError;
-import scala.Tuple2;
+import org.apache.sqoop.schema.Schema;
+import org.apache.sqoop.utils.ClassUtils;
 //import org.apache.spark.api.java.function.Function;
 //import org.apache.spark.rdd.HadoopRDD;
 
@@ -123,6 +129,10 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
   //private static final java.io.ObjectStreamField[] serialPersistentFields =  {
   //new ObjectStreamField("globalConfiguration", org.apache.hadoop.conf.Configuration.class) };
+
+  private /*transient */ IntermediateDataFormat<Object> fromIDF = null;
+  private /*transient*/ IntermediateDataFormat<Object> toIDF = null;
+  private /*transient*/ Matcher matcher;
 
   /**
    * {@inheritDoc}
@@ -203,7 +213,12 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
-    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
+    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local")/*.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
+    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    //sparkConf.set("spark.kryo.classesToRegister", "org.apache.hadoop.conf.Configuration");
+    //sparkConf.set("spark.kryo.classesToRegister", "org.apache.sqoop.connector.idf.IntermediateDataFormat");
+    //sparkConf.registerKryoClasses(Array(classOf[Configuration]));
+
     JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
     //This additional setting up of configuration is to be done on each submission
@@ -211,7 +226,8 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     SparkJobRequest request = (SparkJobRequest) sparkJobRequest;
 
     // Clone global configuration
-    Configuration configuration = new Configuration(globalConfiguration);
+    //jackh: Check 'final' - probably added by Intellij while refactoring conf (from run() in map()) to configuration
+    final Configuration configuration = new Configuration(globalConfiguration);
 
     // Serialize driver context into job configuration
     for(Map.Entry<String, String> entry: request.getDriverContext()) {
@@ -314,32 +330,110 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
       job.setOutputValueClass(request.getOutputValueClass());
 
 
-      //JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(globalConfiguration,
-          //SqoopInputFormatSpark.class, SqoopSplit.class, NullWritable.class);
+      //JavaPairRDD<SqoopSplit, NullWritable> initRDD = sc.newAPIHadoopRDD(globalConfiguration,
+      //SqoopInputFormatSpark.class, SqoopSplit.class, NullWritable.class);
 
-      //JavaPairRDD<SqoopSplit, SqoopSplit> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
-          //SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
+      //JavaPairRDD<SqoopSplit, SqoopSplit> initRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
+      //SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
 
-      JavaPairRDD<SqoopSplit, NullWritable> InitRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
-          SqoopInputFormat.class, SqoopSplit.class, NullWritable.class);
+      JavaPairRDD<SqoopSplit, SqoopSplit> initRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
+          SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
 
-      //scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = InitRDD.first();
+
       /*
-      InitRDD.map(new Function<Tuple2<SqoopSplit,SqoopSplit>, Object>() {
+      //Moving all the extraction setup code into the driver and passing only the actual extraction
+      //to the executor to avoid serialization issues/redundant computation on executors
+      String extractorName = job.getConfiguration().get(MRJobConstants.JOB_ETL_EXTRACTOR);
+      Extractor extractor = (Extractor) ClassUtils.instantiate(extractorName);
+
+      //Changed to unsafe versions of the getConnectorSchema functions to avoid the (weird) cannot cast
+      //Configuration object to JobConf object exception (don't know why this doesn't come elsewhere)
+      Schema fromSchema = MRConfigurationUtils.getConnectorSchema(Direction.FROM, job.getConfiguration());
+      //Schema fromSchema = request.getJobSubmission().getFromSchema();
+      Schema toSchema = MRConfigurationUtils.getConnectorSchema(Direction.TO, job.getConfiguration());
+      //Schema toSchema = request.getJobSubmission().getToSchema();
+
+      matcher = MatcherFactory.getMatcher(fromSchema, toSchema);
+
+      String fromIDFClass = job.getConfiguration().get(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT);
+      fromIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(fromIDFClass);
+      fromIDF.setSchema(matcher.getFromSchema());
+      String toIDFClass = job.getConfiguration().get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
+      toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
+      toIDF.setSchema(matcher.getToSchema());
+
+      // Objects that should be passed to the Executor execution
+      PrefixContext subContext = new PrefixContext(job.getConfiguration(), MRJobConstants.PREFIX_CONNECTOR_FROM_CONTEXT);
+      Object fromConfig = MRConfigurationUtils.getConnectorLinkConfigUnsafe(Direction.FROM, job.getConfiguration());
+      Object fromJob = MRConfigurationUtils.getConnectorJobConfigUnsafe(Direction.FROM, job.getConfiguration());
+      */
+
+
+      if(false) {
+        initRDD.mapValues(new SqoopMapperSpark());
+      }
+
+      if (false) {
+        //scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = initRDD.first();
+        initRDD.mapValues(new Function<SqoopSplit, Object>() {
+
+          @Override
+          public Object call(SqoopSplit split) throws Exception {
+            //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
+            LOG.info("Inside the Spark map() API");
+            LOG.debug("Inside the Spark map() API");
+
+            //SqoopSplit split = context.getCurrentKey();
+            //ExtractorContext extractorContext = new ExtractorContext(subContext, new SqoopMapDataWriter(context), fromSchema);
+
+            return null;
+          }
+        });
+      }
+
+      if (true) {
+        //Create SparkMapTrigger object and use it to trigger mapValues()
+        ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());
+        //String serializedConf = job.getConfiguration().toString();
+        //SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, /*new Integer(404)*/ /*fromIDF*/ /*serializedConf*/ wrappedConf job.getConfiguration()*//*, fromIDF, toIDF*/);
+        SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, wrappedConf);
+        sparkMapTriggerObj.triggerSparkMapValues();
+      }
+
+      /*
+      initRDD.mapValues(new Function<SqoopSplit, SqoopSplit> () {
+
+        private IntermediateDataFormat<Object> fromIDF = null;
+        private IntermediateDataFormat<Object> toIDF = null;
+        private Matcher matcher;
+
         @Override
-        public Object call(Tuple2<SqoopSplit, SqoopSplit> tuple) throws Exception {
+        public Object call(Tuple2<SqoopSplit, NullWritable> tuple) throws Exception {
           //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
-          int i=1;
-          i++;
           LOG.info("Inside the Spark map() API");
           LOG.debug("Inside the Spark map() API");
+
+          String extractorName = configuration.get(MRJobConstants.JOB_ETL_EXTRACTOR);
+          Extractor extractor = (Extractor) ClassUtils.instantiate(extractorName);
+
+          Schema fromSchema = MRConfigurationUtils.getConnectorSchema(Direction.FROM, configuration);
+          Schema toSchema = MRConfigurationUtils.getConnectorSchema(Direction.TO, configuration);
+          matcher = MatcherFactory.getMatcher(fromSchema, toSchema);
+
+          String fromIDFClass = configuration.get(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT);
+          fromIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(fromIDFClass);
+          fromIDF.setSchema(matcher.getFromSchema());
+          String toIDFClass = configuration.get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
+          toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
+          toIDF.setSchema(matcher.getToSchema());
+
           return null;
         }
       });
       */
 
       /*
-      InitRDD.mapValues(new Function<SqoopSplit, Object>() {
+      initRDD.mapValues(new Function<SqoopSplit, Object>() {
         @Override
         public Object call(SqoopSplit sqoopSplit) throws Exception {
           return null;
@@ -347,16 +441,16 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
       });
       */
 
-      //InitRDD.mapValues(new SqoopMapperSpark());
+      //initRDD.mapValues(new SqoopMapperSpark());
 
-      InitRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
+      initRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
 
       //Trigger the transformation - stub
-      //InitRDD.first();
+      //initRDD.first();
 
       //Trigger the map() using reduceByKey()
       /*
-      InitRDD.reduceByKey(new Function2<SqoopSplit, SqoopSplit, SqoopSplit>() {
+      initRDD.reduceByKey(new Function2<SqoopSplit, SqoopSplit, SqoopSplit>() {
         @Override
         public SqoopSplit call(SqoopSplit sqoopSplit, SqoopSplit sqoopSplit2) throws Exception {
           LOG.info("Inside the Spark reduceByKey() API");
@@ -365,7 +459,6 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
         }
       });
       */
-
 
     } catch (Exception e) {
       SubmissionError error = new SubmissionError();
@@ -399,25 +492,23 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
     sc.stop();
 
     return true;
-    }
+  }
 
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void stop(String externalJobId) {
-
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void update(MSubmission submission) {
-
-    }
-
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void stop(String externalJobId) {
 
   }
+
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void update(MSubmission submission) {
+
+  }
+}
