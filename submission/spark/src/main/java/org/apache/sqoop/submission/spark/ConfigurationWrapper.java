@@ -23,6 +23,4 @@ public class ConfigurationWrapper implements Serializable {
     in.defaultReadObject();
     conf.readFields(in);
   }
-
-  public Confi getConfiguration()
 }
