@@ -6,13 +6,25 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
+import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
+import org.apache.sqoop.connector.matcher.Matcher;
+import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.error.code.MRExecutionError;
 import org.apache.sqoop.etl.io.DataWriter;
+import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.job.PrefixContext;
+import org.apache.sqoop.job.etl.Extractor;
 import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.job.mr.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopSplit;
+import org.apache.sqoop.schema.Schema;
+import org.apache.sqoop.utils.ClassUtils;
+import scala.Tuple2;
 
 import java.io.DataOutputStream;
 import java.io.Serializable;
@@ -27,6 +39,9 @@ public class SparkMapTrigger implements Serializable {
   //private Configuration conf;
   //private Job job;
   //private String serializedConf;
+  private Matcher matcher;
+  private IntermediateDataFormat<Object> fromIDF = null;
+  private IntermediateDataFormat<Object> toIDF = null;
 
   //public SparkMapTrigger(JavaPairRDD<SqoopSplit,SqoopSplit> inputRDD, Integer i /*String serializedConf /*ConfigurationWrapper wrappedConf Configuration conf,*/ /*IntermediateDataFormat<Object> fromIDF*//*, IntermediateDataFormat<Object> toIDF*/) {
   public SparkMapTrigger(JavaPairRDD<SqoopSplit, SqoopSplit> inputRDD, ConfigurationWrapper wrappedConf) {
@@ -40,11 +55,43 @@ public class SparkMapTrigger implements Serializable {
     //this.toIDF = toIDF;
   }
 
-  public Object triggerSparkMapValues() {
-    rdd.mapValues(new Function<SqoopSplit, SqoopSplit>() {
-
+  public JavaPairRDD<SqoopWritable,NullWritable> triggerSparkMapValues() {
+    //return rdd.mapValues(new Function<SqoopSplit, Integer>() {
+    return rdd.mapToPair(new PairFunction<Tuple2<SqoopSplit, SqoopSplit>, SqoopWritable, NullWritable>() {
       @Override
-      public SqoopSplit call(SqoopSplit split) throws Exception {
+      public Tuple2<SqoopWritable, NullWritable> call(Tuple2<SqoopSplit, SqoopSplit> sqoopSplitSqoopSplitTuple2) throws Exception {
+        Configuration conf = wrappedConf.getConfiguration();
+
+        String extractorName = conf.get(MRJobConstants.JOB_ETL_EXTRACTOR);
+        Extractor extractor = (Extractor) ClassUtils.instantiate(extractorName);
+
+        Schema fromSchema = MRConfigurationUtils.getConnectorSchemaUnsafe(Direction.FROM, conf);
+        Schema toSchema = MRConfigurationUtils.getConnectorSchemaUnsafe(Direction.TO, conf);
+        matcher = MatcherFactory.getMatcher(fromSchema, toSchema);
+
+        String fromIDFClass = conf.get(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT);
+        fromIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(fromIDFClass);
+        fromIDF.setSchema(matcher.getFromSchema());
+        String toIDFClass = conf.get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
+        toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
+        toIDF.setSchema(matcher.getToSchema());
+
+        // Objects that should be passed to the Executor execution
+        PrefixContext subContext = new PrefixContext(conf, MRJobConstants.PREFIX_CONNECTOR_FROM_CONTEXT);
+        Object fromConfig = MRConfigurationUtils.getConnectorLinkConfigUnsafe(Direction.FROM, conf);
+        Object fromJob = MRConfigurationUtils.getConnectorJobConfigUnsafe(Direction.FROM, conf);
+
+        //jackh: test stub
+        SqoopWritable writable = new SqoopWritable();
+        NullWritable nullWritable = NullWritable.get();
+        Tuple2<SqoopWritable, NullWritable> returnTuple = new Tuple2<SqoopWritable, NullWritable>(writable, nullWritable);
+        return returnTuple;
+      }
+    });
+
+      /*
+      @Override
+      public Integer call(SqoopSplit split) throws Exception {
         //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
         //LOG.info("Inside the Spark map() API");
         //LOG.debug("Inside the Spark map() API");
@@ -53,11 +100,13 @@ public class SparkMapTrigger implements Serializable {
         //ExtractorContext extractorContext = new ExtractorContext(subContext, new SqoopMapDataWriter(context), fromSchema);
 
         //String extractorName = wrappedConf.get(MRJobConstants.JOB_ETL_EXTRACTOR);
+        Configuration conf = wrappedConf.getConfiguration();
 
-        return null;
+        return new Integer(404);
       }
     });
-    return null;
+    */
+    //return null;
   }
 
   /*

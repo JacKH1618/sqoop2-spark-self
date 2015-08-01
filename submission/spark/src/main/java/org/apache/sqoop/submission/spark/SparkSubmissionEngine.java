@@ -67,6 +67,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
@@ -213,7 +214,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
-    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local")/*.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
+    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local[10]")/*.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
     sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
     //sparkConf.set("spark.kryo.classesToRegister", "org.apache.hadoop.conf.Configuration");
     //sparkConf.set("spark.kryo.classesToRegister", "org.apache.sqoop.connector.idf.IntermediateDataFormat");
@@ -391,13 +392,14 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
         });
       }
 
+      JavaPairRDD<SqoopWritable, NullWritable> mappedRDD;
       if (true) {
         //Create SparkMapTrigger object and use it to trigger mapValues()
         ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());
         //String serializedConf = job.getConfiguration().toString();
         //SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, /*new Integer(404)*/ /*fromIDF*/ /*serializedConf*/ wrappedConf job.getConfiguration()*//*, fromIDF, toIDF*/);
         SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, wrappedConf);
-        sparkMapTriggerObj.triggerSparkMapValues();
+        mappedRDD = sparkMapTriggerObj.triggerSparkMapValues();
       }
 
       /*
@@ -443,7 +445,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
 
       //initRDD.mapValues(new SqoopMapperSpark());
 
-      initRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
+      mappedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
 
       //Trigger the transformation - stub
       //initRDD.first();

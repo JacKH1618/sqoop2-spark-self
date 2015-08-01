@@ -255,11 +255,12 @@ public final class MRConfigurationUtils {
    */
   public static Object getConnectorLinkConfigUnsafe(Direction type, Configuration configuration) {
     switch (type) {
+      //Removed typecast to JobConf to avoid ClassCastException thrown while using the Spark engine
       case FROM:
-        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_OBJ);
+        return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_LINK_OBJ);
 
       case TO:
-        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_NAME, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_OBJ);
+        return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_NAME, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_LINK_OBJ);
     }
 
     return null;
@@ -274,11 +275,12 @@ public final class MRConfigurationUtils {
    */
   public static Object getConnectorJobConfigUnsafe(Direction type, Configuration configuration) {
     switch (type) {
+      //Removed typecast to JobConf to avoid ClassCastException thrown while using the Spark engine
       case FROM:
-        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
+        return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
 
       case TO:
-        return loadConfigurationUnsafe((JobConf) configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
+        return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
     }
 
     return null;
@@ -414,13 +416,13 @@ public final class MRConfigurationUtils {
    * Load configuration instance stored in the Mapreduce configuration object
    * instead of the Hadoop credentials cache.
    *
-   * @param configuration JobConf object associated with the job
+   * @param configuration Configuration object associated with the job
    * @param classProperty Property with stored configuration class name
    * @param valueProperty Property with stored JSON representation of the
    *                      configuration object
    * @return New instance with loaded data
    */
-  private static Object loadConfigurationUnsafe(JobConf configuration, String classProperty, String valueProperty) {
+  private static Object loadConfigurationUnsafe(Configuration configuration, String classProperty, String valueProperty) {
     // Create new instance of configuration class
     Object object = ClassUtils.instantiate(configuration.get(classProperty));
     if(object == null) {
