@@ -214,8 +214,8 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
-    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local[10]")/*.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
-    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local")/*.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
+    //sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
     //sparkConf.set("spark.kryo.classesToRegister", "org.apache.hadoop.conf.Configuration");
     //sparkConf.set("spark.kryo.classesToRegister", "org.apache.sqoop.connector.idf.IntermediateDataFormat");
     //sparkConf.registerKryoClasses(Array(classOf[Configuration]));

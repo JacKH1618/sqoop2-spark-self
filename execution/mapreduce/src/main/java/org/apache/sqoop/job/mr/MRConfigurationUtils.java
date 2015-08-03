@@ -280,7 +280,7 @@ public final class MRConfigurationUtils {
         return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
 
       case TO:
-        return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_FROM_CONNECTOR_JOB_OBJ);
+        return loadConfigurationUnsafe(configuration, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB_NAME, MR_JOB_CONFIG_CLASS_TO_CONNECTOR_JOB_OBJ);
     }
 
     return null;
