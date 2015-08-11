@@ -16,6 +16,7 @@ import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.error.code.MRExecutionError;
 import org.apache.sqoop.etl.io.DataWriter;
+import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Extractor;
@@ -29,6 +30,7 @@ import scala.Tuple2;
 
 import java.io.DataOutputStream;
 import java.io.Serializable;
+import java.util.LinkedList;
 
 public class SparkMapTrigger implements Serializable {
 
@@ -44,6 +46,8 @@ public class SparkMapTrigger implements Serializable {
   private IntermediateDataFormat<Object> fromIDF = null;
   private IntermediateDataFormat<Object> toIDF = null;
 
+  private SqoopWritableListWrapper listWrapper;
+
   //public SparkMapTrigger(JavaPairRDD<SqoopSplit,SqoopSplit> inputRDD, Integer i /*String serializedConf /*ConfigurationWrapper wrappedConf Configuration conf,*/ /*IntermediateDataFormat<Object> fromIDF*//*, IntermediateDataFormat<Object> toIDF*/) {
   public SparkMapTrigger(JavaPairRDD<SqoopSplit, SqoopSplit> inputRDD, ConfigurationWrapper wrappedConf) {
     this.rdd = inputRDD;
@@ -56,11 +60,11 @@ public class SparkMapTrigger implements Serializable {
     //this.toIDF = toIDF;
   }
 
-  public JavaPairRDD<SqoopWritable,NullWritable> triggerSparkMapValues() {
+  public JavaPairRDD<SqoopWritableListWrapper,NullWritable> triggerSparkMapValues() {
     //return rdd.mapValues(new Function<SqoopSplit, Integer>() {
-    return rdd.mapToPair(new PairFunction<Tuple2<SqoopSplit, SqoopSplit>, SqoopWritable, NullWritable>() {
+    return rdd.mapToPair(new PairFunction<Tuple2<SqoopSplit, SqoopSplit>, SqoopWritableListWrapper, NullWritable>() {
       @Override
-      public Tuple2<SqoopWritable, NullWritable> call(Tuple2<SqoopSplit, SqoopSplit> inputTuple) throws Exception {
+      public Tuple2<SqoopWritableListWrapper, NullWritable> call(Tuple2<SqoopSplit, SqoopSplit> inputTuple) throws Exception {
         Configuration conf = wrappedConf.getConfiguration();
 
         String extractorName = conf.get(MRJobConstants.JOB_ETL_EXTRACTOR);
@@ -73,16 +77,16 @@ public class SparkMapTrigger implements Serializable {
         String fromIDFClass = conf.get(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT);
         fromIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(fromIDFClass);
         fromIDF.setSchema(matcher.getFromSchema());
-        String toIDFClass = conf.get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
-        toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
-        toIDF.setSchema(matcher.getToSchema());
+        //String toIDFClass = conf.get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
+        //toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
+        //toIDF.setSchema(matcher.getToSchema());
 
         // Objects that should be passed to the Executor execution
         PrefixContext subContext = new PrefixContext(conf, MRJobConstants.PREFIX_CONNECTOR_FROM_CONTEXT);
         Object fromConfig = MRConfigurationUtils.getConnectorLinkConfigUnsafe(Direction.FROM, conf);
         Object fromJob = MRConfigurationUtils.getConnectorJobConfigUnsafe(Direction.FROM, conf);
 
-        SqoopMapDataWriterSpark dataWriterSpark = new SqoopMapDataWriterSpark();
+        SqoopMapDataWriterSpark dataWriterSpark = new SqoopMapDataWriterSpark(conf);
         ExtractorContext extractorContext = new ExtractorContext(subContext, dataWriterSpark /*new SqoopMapDataWriterSpark(context)*/, fromSchema);
 
         SqoopSplit split = inputTuple._1();
@@ -95,8 +99,9 @@ public class SparkMapTrigger implements Serializable {
 
         }
 
+        listWrapper = new SqoopWritableListWrapper(dataWriterSpark.writablesList);
         NullWritable nullWritable = NullWritable.get();
-        Tuple2<SqoopWritable, NullWritable> returnTuple = new Tuple2<SqoopWritable, NullWritable>(dataWriterSpark.writable, nullWritable);
+        Tuple2<SqoopWritableListWrapper, NullWritable> returnTuple = new Tuple2<SqoopWritableListWrapper, NullWritable>(listWrapper, nullWritable);
         return returnTuple;
 
         //jackh: test stub
@@ -136,11 +141,15 @@ public class SparkMapTrigger implements Serializable {
   // the two schemas and their corresponding column types before we write the data to the toIDF object
   private class SqoopMapDataWriterSpark extends DataWriter {
     //private Mapper.Context context;
-    private SqoopWritable writable;
+    //private SqoopWritable writable;
+    private Configuration conf;
+    private LinkedList<SqoopWritable> writablesList;
 
-    public SqoopMapDataWriterSpark(/*Mapper.Context context*/) {
+    public SqoopMapDataWriterSpark(Configuration conf) {
       //this.context = context;
-      this.writable = new SqoopWritable(toIDF);
+      //this.writable = new SqoopWritable(toIDF);
+      this.conf = conf;
+      this.writablesList = new LinkedList<SqoopWritable>();
     }
 
     @Override
@@ -170,16 +179,24 @@ public class SparkMapTrigger implements Serializable {
           LOG.debug("Extracted data: " + fromIDF.getCSVTextData());
         }
         */
-      // NOTE: The fromIDF and the corresponding fromSchema is used only for the matching process
-      // The output of the mappers is finally written to the toIDF object after the matching process
-      // since the writable encapsulates the toIDF ==> new SqoopWritable(toIDF)
-      toIDF.setObjectData(matcher.getMatchingData(fromIDF.getObjectData()));
-      // NOTE: We do not use the reducer to do the writing (a.k.a LOAD in ETL). Hence the mapper sets up the writable
-      //context.write(writable, NullWritable.get());
-    } catch (Exception e) {
-      throw new SqoopException(MRExecutionError.MAPRED_EXEC_0013, e);
+        // NOTE: The fromIDF and the corresponding fromSchema is used only for the matching process
+        // The output of the mappers is finally written to the toIDF object after the matching process
+        // since the writable encapsulates the toIDF ==> new SqoopWritable(toIDF)
+
+        String toIDFClass = conf.get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
+        toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
+        toIDF.setSchema(matcher.getToSchema());
+        toIDF.setObjectData(matcher.getMatchingData(fromIDF.getObjectData()));
+
+        SqoopWritable writable = new SqoopWritable(toIDF);
+        writablesList.add(writable);
+
+        // NOTE: We do not use the reducer to do the writing (a.k.a LOAD in ETL). Hence the mapper sets up the writable
+        //context.write(writable, NullWritable.get());
+      } catch (Exception e) {
+        throw new SqoopException(MRExecutionError.MAPRED_EXEC_0013, e);
+      }
     }
   }
-}
 
 }

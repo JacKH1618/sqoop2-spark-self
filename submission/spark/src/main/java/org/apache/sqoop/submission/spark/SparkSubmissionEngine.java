@@ -79,6 +79,7 @@ import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.error.code.MRExecutionError;
 import org.apache.sqoop.etl.io.DataWriter;
 import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
+import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Extractor;
@@ -392,7 +393,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
         });
       }
 
-      JavaPairRDD<SqoopWritable, NullWritable> mappedRDD;
+      JavaPairRDD<SqoopWritableListWrapper, NullWritable> mappedRDD;
       if (true) {
         //Create SparkMapTrigger object and use it to trigger mapValues()
         ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());

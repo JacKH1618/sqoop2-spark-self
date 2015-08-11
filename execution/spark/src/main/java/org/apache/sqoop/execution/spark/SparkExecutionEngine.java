@@ -58,12 +58,13 @@ public class SparkExecutionEngine extends ExecutionEngine {
     //sparkJobRequest.setInputFormatClass(SqoopInputFormatSpark.class);
     sparkJobRequest.setInputFormatClass(SqoopInputFormat.class);
 
+    //jackh: Might not need below three
     sparkJobRequest.setMapperClass(SqoopMapper.class);
     sparkJobRequest.setMapOutputKeyClass(SqoopWritable.class);
     sparkJobRequest.setMapOutputValueClass(NullWritable.class);
 
-    sparkJobRequest.setOutputFormatClass(SqoopNullOutputFormat.class);
-    sparkJobRequest.setOutputKeyClass(SqoopWritable.class);
+    sparkJobRequest.setOutputFormatClass(SqoopNullOutputFormatSpark.class);
+    sparkJobRequest.setOutputKeyClass(SqoopWritableListWrapper.class);
     sparkJobRequest.setOutputValueClass(NullWritable.class);
 
     From from = (From) sparkJobRequest.getFrom();

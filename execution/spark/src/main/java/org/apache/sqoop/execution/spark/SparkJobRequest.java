@@ -18,11 +18,15 @@
 package org.apache.sqoop.execution.spark;
 
 //jackh: Might need to change these for Spark instead of MR
+//Update: Might not need mapper, mapOutputKey, mapOutputValue classes
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.sqoop.driver.JobRequest;
+import org.apache.sqoop.job.io.SqoopWritable;
+
+import java.util.LinkedList;
 
 /**
  * Spark specific submission request containing all extra information
@@ -38,7 +42,16 @@ public class SparkJobRequest extends JobRequest {
   Class<? extends Writable> mapOutputKeyClass;
   Class<? extends Writable> mapOutputValueClass;
   Class<? extends OutputFormat> outputFormatClass;
-  Class<? extends Writable> outputKeyClass;
+
+  //jackh: For building a List wrapper around the outputKeyClass
+  //Later improvement: The Spark engine, the way it is currently written, will always (?) need a list of
+  //SqoopWritable like stuff as the key class. This is because the mapPair() API will return a tuple per
+  //partition and so the key of this tuple cannot be just one row, it has to be a collection of rows.
+  //Can probably make an interface to ensure this.
+
+  //Class<? extends Writable> outputKeyClass;
+  Class outputKeyClass;
+
   Class<? extends Writable> outputValueClass;
 
   public SparkJobRequest() {
@@ -85,11 +98,13 @@ public class SparkJobRequest extends JobRequest {
     this.outputFormatClass = outputFormatClass;
   }
 
-  public Class<? extends Writable> getOutputKeyClass() {
+  //public Class<? extends Writable> getOutputKeyClass() {
+  public Class<LinkedList<SqoopWritable>> getOutputKeyClass() {
     return outputKeyClass;
   }
 
-  public void setOutputKeyClass(Class<? extends Writable> outputKeyClass) {
+  //public void setOutputKeyClass(Class<? extends Writable> outputKeyClass) {
+  public void setOutputKeyClass(Class outputKeyClass) {
     this.outputKeyClass = outputKeyClass;
   }
 
