@@ -183,7 +183,7 @@ public class SparkSubmissionEngine extends SubmissionEngine {
    */
   @Override
   public void destroy() {
-
+    sc.stop();
   }
 
   /**
@@ -267,14 +267,13 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       MRConfigurationUtils.setConnectorSchemaUnsafe(Direction.FROM, job.getConfiguration(), request.getJobSubmission().getFromSchema());
       MRConfigurationUtils.setConnectorSchemaUnsafe(Direction.TO, job.getConfiguration(), request.getJobSubmission().getToSchema());
 
-      //Retaining to minimize change to existing functioning code
+      // Retaining to minimize change to existing functioning code
       MRConfigurationUtils.setConnectorLinkConfig(Direction.FROM, job, request.getConnectorLinkConfig(Direction.FROM));
       MRConfigurationUtils.setConnectorLinkConfig(Direction.TO, job, request.getConnectorLinkConfig(Direction.TO));
       MRConfigurationUtils.setConnectorJobConfig(Direction.FROM, job, request.getJobConfig(Direction.FROM));
       MRConfigurationUtils.setConnectorJobConfig(Direction.TO, job, request.getJobConfig(Direction.TO));
       MRConfigurationUtils.setConnectorSchema(Direction.FROM, job, request.getJobSubmission().getFromSchema());
       MRConfigurationUtils.setConnectorSchema(Direction.TO, job, request.getJobSubmission().getToSchema());
-
 
       if (request.getJobName() != null) {
         job.setJobName("Sqoop: " + request.getJobName());
@@ -288,14 +287,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       job.setMapOutputKeyClass(request.getMapOutputKeyClass());
       job.setMapOutputValueClass(request.getMapOutputValueClass());
 
-      // Set number of reducers as number of configured loaders  or suppress
-      // reduce phase entirely if loaders are not set at all.
-      if (request.getLoaders() != null) {
-        job.setNumReduceTasks(request.getLoaders());
-      } else {
-        job.setNumReduceTasks(0);
-      }
-
       job.setOutputFormatClass(request.getOutputFormatClass());
       job.setOutputKeyClass(request.getOutputKeyClass());
       job.setOutputValueClass(request.getOutputValueClass());
@@ -304,14 +295,15 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       JavaPairRDD<SqoopSplit, SqoopSplit> initRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
           SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
 
-      //Create SparkMapTrigger object and use it to trigger mapToPair()
+      // Create SparkMapTrigger object and use it to trigger mapToPair()
       ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());
       SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, wrappedConf);
       JavaPairRDD<SqoopWritableListWrapper, NullWritable> mappedRDD = sparkMapTriggerObj.triggerSparkMapValues();
 
+      // Add reduce phase/any transformation code here
+
       // Calls the OutputFormat for writing
       mappedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
-
 
     } catch (Exception e) {
       SubmissionError error = new SubmissionError();
@@ -325,8 +317,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       LOG.error("Error in submitting job", e);
       return false;
     }
-
-    sc.stop();
 
     return true;
   }
