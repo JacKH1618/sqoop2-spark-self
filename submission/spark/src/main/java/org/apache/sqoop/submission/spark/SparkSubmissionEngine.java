@@ -171,17 +171,7 @@ public class SparkSubmissionEngine extends SubmissionEngine {
     // Save our own property inside the job to easily identify Sqoop jobs
     globalConfiguration.setBoolean(Constants.SQOOP_JOB, true);
 
-    // Create jobConf object to be used for creating the RDD from InputFormat
-    //try {
-    //jobConf = new JobConf(globalConfiguration);
-    //jobClient = new JobClient(new JobConf(globalConfiguration));
-    //} catch (IOException e) {
-    //throw new SqoopException(SparkSubmissionError.SPARK_0002, e);
-    //}
-
-    //if(isLocal()) {
-    //LOG.info("Detected MapReduce local mode, some methods might not work correctly.");
-
+    // Initialize the Spark Context
     sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
     sc = new JavaSparkContext(sparkConf);
 
@@ -210,10 +200,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
    */
   @Override
   public boolean submit(JobRequest sparkJobRequest) {
-
-    //Move this to initialize()
-    //SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
-    //JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
     //This additional setting up of configuration is to be done on each submission
     //(as in the MR engine)
@@ -254,9 +240,9 @@ public class SparkSubmissionEngine extends SubmissionEngine {
     }
 
     // Set up notification URL if it's available
-    if(request.getNotificationUrl() != null) {
-      configuration.set("job.end.notification.url", request.getNotificationUrl());
-    }
+    //if(request.getNotificationUrl() != null) {
+      //configuration.set("job.end.notification.url", request.getNotificationUrl());
+    //}
 
     // Turn off speculative execution
     //configuration.setBoolean("mapred.map.tasks.speculative.execution", false);
