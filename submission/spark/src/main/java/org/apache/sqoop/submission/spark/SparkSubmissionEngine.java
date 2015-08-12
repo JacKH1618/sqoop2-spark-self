@@ -108,6 +108,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.sqoop.model.SubmissionError;
 import org.apache.sqoop.schema.Schema;
+import org.apache.sqoop.submission.SubmissionStatus;
 import org.apache.sqoop.utils.ClassUtils;
 //import org.apache.spark.api.java.function.Function;
 //import org.apache.spark.rdd.HadoopRDD;
@@ -305,6 +306,11 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       // Calls the OutputFormat for writing
       mappedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
 
+      // Data transfer completed successfully if here
+      request.getJobSubmission().setStatus(SubmissionStatus.SUCCEEDED);
+
+      return true;
+
     } catch (Exception e) {
       SubmissionError error = new SubmissionError();
       error.setErrorSummary(e.toString());
@@ -318,7 +324,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       return false;
     }
 
-    return true;
   }
 
 
