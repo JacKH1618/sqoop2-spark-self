@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.error.code.MRExecutionError;
+import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.*;
@@ -63,7 +64,7 @@ public class SqoopInputFormatSpark extends InputFormat<SqoopSplit, SqoopSplit> {
     //SQOOP-2382: Need to skip this check in case extractors is set to 1
     // and null values are allowed in partitioning column
     if(splits.size() > maxPartitions && (false == partitionerContext.getSkipMaxPartitionCheck())) {
-      throw new SqoopException(MRExecutionError.MAPRED_EXEC_0025,
+      throw new SqoopException(SparkExecutionError.SPARK_EXEC_0025,
           String.format("Got %d, max was %d", splits.size(), maxPartitions));
     }
 

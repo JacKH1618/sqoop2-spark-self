@@ -32,6 +32,7 @@ import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.error.code.MRExecutionError;
+import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.etl.io.DataReader;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
@@ -177,7 +178,7 @@ public class SqoopOutputFormatLoadExecutorSpark {
         free.release();
       }
 
-      throw new SqoopException(MRExecutionError.MAPRED_EXEC_0019, ex);
+      throw new SqoopException(SparkExecutionError.SPARK_EXEC_0019, ex);
     }
   }
 
@@ -222,7 +223,7 @@ public class SqoopOutputFormatLoadExecutorSpark {
       } catch (Throwable t) {
         readerFinished = true;
         LOG.error("Caught exception e while getting content ", t);
-        throw new SqoopException(MRExecutionError.MAPRED_EXEC_0018, t);
+        throw new SqoopException(SparkExecutionError.SPARK_EXEC_0018, t);
       } finally {
         releaseSema();
       }
@@ -291,7 +292,7 @@ public class SqoopOutputFormatLoadExecutorSpark {
         // Release so that the writer can tell Sqoop something went
         // wrong.
         free.release();
-        throw new SqoopException(MRExecutionError.MAPRED_EXEC_0018, t);
+        throw new SqoopException(SparkExecutionError.SPARK_EXEC_0018, t);
       }
 
       // if no exception happens yet and reader finished before writer,
@@ -303,7 +304,7 @@ public class SqoopOutputFormatLoadExecutorSpark {
         // Release so that the writer can tell Sqoop something went
         // wrong.
         free.release();
-        throw new SqoopException(MRExecutionError.MAPRED_EXEC_0019);
+        throw new SqoopException(SparkExecutionError.SPARK_EXEC_0019);
 
       }
       // inform writer that reader is finished

@@ -28,11 +28,7 @@ public enum SparkSubmissionError implements ErrorCode {
 
   SPARK_0002("Failure on submission engine initialization"),
 
-  //SPARK_0003("Can't get RunningJob instance"),
-
-  //SPARK_0004("Unknown map reduce job status"),
-
-  SPARK_0005("Failure on submission engine destroy"),
+  SPARK_0003("Failure on submission engine destroy"),
 
   ;
 

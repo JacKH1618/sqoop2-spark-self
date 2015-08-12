@@ -15,6 +15,7 @@ import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.error.code.MRExecutionError;
+import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.etl.io.DataWriter;
 import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.job.MRJobConstants;
@@ -77,7 +78,7 @@ public class SparkMapTrigger implements Serializable {
         try {
           extractor.extract(extractorContext, fromConfig, fromJob, split.getPartition());
         } catch (Exception e) {
-          throw new SqoopException(MRExecutionError.MAPRED_EXEC_0017, e);
+          throw new SqoopException(SparkExecutionError.SPARK_EXEC_0017, e);
         } finally {
 
         }
@@ -148,7 +149,7 @@ public class SparkMapTrigger implements Serializable {
         // NOTE: We do not use the reducer to do the writing (a.k.a LOAD in ETL). Hence the mapper sets up the writable
         //context.write(writable, NullWritable.get());
       } catch (Exception e) {
-        throw new SqoopException(MRExecutionError.MAPRED_EXEC_0013, e);
+        throw new SqoopException(SparkExecutionError.SPARK_EXEC_0013, e);
       }
     }
   }

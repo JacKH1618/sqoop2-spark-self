@@ -85,7 +85,8 @@ import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Extractor;
 import org.apache.sqoop.job.etl.ExtractorContext;
 import org.apache.sqoop.job.io.SqoopWritable;
-import org.apache.sqoop.job.mr.*;
+import org.apache.sqoop.job.mr.MRConfigurationUtils;
+import org.apache.sqoop.job.mr.SqoopSplit;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.execution.spark.SparkExecutionEngine;
 //import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
@@ -184,6 +185,8 @@ public class SparkSubmissionEngine extends SubmissionEngine {
    */
   @Override
   public void destroy() {
+    super.destroy();
+    LOG.info("Destroying Spark Submission Engine");
     sc.stop();
   }
 
