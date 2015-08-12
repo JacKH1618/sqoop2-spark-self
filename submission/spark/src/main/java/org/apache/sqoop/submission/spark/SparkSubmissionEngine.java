@@ -239,15 +239,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
           entry.getValue());
     }
 
-    // Set up notification URL if it's available
-    //if(request.getNotificationUrl() != null) {
-      //configuration.set("job.end.notification.url", request.getNotificationUrl());
-    //}
-
-    // Turn off speculative execution
-    //configuration.setBoolean("mapred.map.tasks.speculative.execution", false);
-    //configuration.setBoolean("mapred.reduce.tasks.speculative.execution", false);
-
     // Promote all required jars to the job
     configuration.set("tmpjars", StringUtils.join(request.getJars(), ","));
 
@@ -309,137 +300,18 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       job.setOutputKeyClass(request.getOutputKeyClass());
       job.setOutputValueClass(request.getOutputValueClass());
 
-
-      //JavaPairRDD<SqoopSplit, NullWritable> initRDD = sc.newAPIHadoopRDD(globalConfiguration,
-      //SqoopInputFormatSpark.class, SqoopSplit.class, NullWritable.class);
-
-      //JavaPairRDD<SqoopSplit, SqoopSplit> initRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
-      //SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
-
+      // Form the initial RDD from the Hadoop configuration object set up above
       JavaPairRDD<SqoopSplit, SqoopSplit> initRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
           SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
 
+      //Create SparkMapTrigger object and use it to trigger mapToPair()
+      ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());
+      SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, wrappedConf);
+      JavaPairRDD<SqoopWritableListWrapper, NullWritable> mappedRDD = sparkMapTriggerObj.triggerSparkMapValues();
 
-      /*
-      //Moving all the extraction setup code into the driver and passing only the actual extraction
-      //to the executor to avoid serialization issues/redundant computation on executors
-      String extractorName = job.getConfiguration().get(MRJobConstants.JOB_ETL_EXTRACTOR);
-      Extractor extractor = (Extractor) ClassUtils.instantiate(extractorName);
-
-      //Changed to unsafe versions of the getConnectorSchema functions to avoid the (weird) cannot cast
-      //Configuration object to JobConf object exception (don't know why this doesn't come elsewhere)
-      Schema fromSchema = MRConfigurationUtils.getConnectorSchema(Direction.FROM, job.getConfiguration());
-      //Schema fromSchema = request.getJobSubmission().getFromSchema();
-      Schema toSchema = MRConfigurationUtils.getConnectorSchema(Direction.TO, job.getConfiguration());
-      //Schema toSchema = request.getJobSubmission().getToSchema();
-
-      matcher = MatcherFactory.getMatcher(fromSchema, toSchema);
-
-      String fromIDFClass = job.getConfiguration().get(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT);
-      fromIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(fromIDFClass);
-      fromIDF.setSchema(matcher.getFromSchema());
-      String toIDFClass = job.getConfiguration().get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
-      toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
-      toIDF.setSchema(matcher.getToSchema());
-
-      // Objects that should be passed to the Executor execution
-      PrefixContext subContext = new PrefixContext(job.getConfiguration(), MRJobConstants.PREFIX_CONNECTOR_FROM_CONTEXT);
-      Object fromConfig = MRConfigurationUtils.getConnectorLinkConfigUnsafe(Direction.FROM, job.getConfiguration());
-      Object fromJob = MRConfigurationUtils.getConnectorJobConfigUnsafe(Direction.FROM, job.getConfiguration());
-      */
-
-
-      if(false) {
-        initRDD.mapValues(new SqoopMapperSpark());
-      }
-
-      if (false) {
-        //scala.Tuple2<SqoopSplit, NullWritable> testFirstTuple = initRDD.first();
-        initRDD.mapValues(new Function<SqoopSplit, Object>() {
-
-          @Override
-          public Object call(SqoopSplit split) throws Exception {
-            //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
-            LOG.info("Inside the Spark map() API");
-            LOG.debug("Inside the Spark map() API");
-
-            //SqoopSplit split = context.getCurrentKey();
-            //ExtractorContext extractorContext = new ExtractorContext(subContext, new SqoopMapDataWriter(context), fromSchema);
-
-            return null;
-          }
-        });
-      }
-
-      JavaPairRDD<SqoopWritableListWrapper, NullWritable> mappedRDD;
-      if (true) {
-        //Create SparkMapTrigger object and use it to trigger mapValues()
-        ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());
-        //String serializedConf = job.getConfiguration().toString();
-        //SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, /*new Integer(404)*/ /*fromIDF*/ /*serializedConf*/ wrappedConf job.getConfiguration()*//*, fromIDF, toIDF*/);
-        SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, wrappedConf);
-        mappedRDD = sparkMapTriggerObj.triggerSparkMapValues();
-      }
-
-      /*
-      initRDD.mapValues(new Function<SqoopSplit, SqoopSplit> () {
-
-        private IntermediateDataFormat<Object> fromIDF = null;
-        private IntermediateDataFormat<Object> toIDF = null;
-        private Matcher matcher;
-
-        @Override
-        public Object call(Tuple2<SqoopSplit, NullWritable> tuple) throws Exception {
-          //Plugin here whatever is done in SqoopMapper's run() (in whatever way possible)
-          LOG.info("Inside the Spark map() API");
-          LOG.debug("Inside the Spark map() API");
-
-          String extractorName = configuration.get(MRJobConstants.JOB_ETL_EXTRACTOR);
-          Extractor extractor = (Extractor) ClassUtils.instantiate(extractorName);
-
-          Schema fromSchema = MRConfigurationUtils.getConnectorSchema(Direction.FROM, configuration);
-          Schema toSchema = MRConfigurationUtils.getConnectorSchema(Direction.TO, configuration);
-          matcher = MatcherFactory.getMatcher(fromSchema, toSchema);
-
-          String fromIDFClass = configuration.get(MRJobConstants.FROM_INTERMEDIATE_DATA_FORMAT);
-          fromIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(fromIDFClass);
-          fromIDF.setSchema(matcher.getFromSchema());
-          String toIDFClass = configuration.get(MRJobConstants.TO_INTERMEDIATE_DATA_FORMAT);
-          toIDF = (IntermediateDataFormat<Object>) ClassUtils.instantiate(toIDFClass);
-          toIDF.setSchema(matcher.getToSchema());
-
-          return null;
-        }
-      });
-      */
-
-      /*
-      initRDD.mapValues(new Function<SqoopSplit, Object>() {
-        @Override
-        public Object call(SqoopSplit sqoopSplit) throws Exception {
-          return null;
-        }
-      });
-      */
-
-      //initRDD.mapValues(new SqoopMapperSpark());
-
+      // Calls the OutputFormat for writing
       mappedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
 
-      //Trigger the transformation - stub
-      //initRDD.first();
-
-      //Trigger the map() using reduceByKey()
-      /*
-      initRDD.reduceByKey(new Function2<SqoopSplit, SqoopSplit, SqoopSplit>() {
-        @Override
-        public SqoopSplit call(SqoopSplit sqoopSplit, SqoopSplit sqoopSplit2) throws Exception {
-          LOG.info("Inside the Spark reduceByKey() API");
-          LOG.debug("Inside the Spark reduceByKey() API");
-          return null;
-        }
-      });
-      */
 
     } catch (Exception e) {
       SubmissionError error = new SubmissionError();
@@ -453,22 +325,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       LOG.error("Error in submitting job", e);
       return false;
     }
-
-    //Test stub
-    /*
-    String logFile = "/Users/banmeet.singh/spark-1.3.1-bin-cdh4/README.md"; // Should be some file on your system
-    JavaRDD<String> logData = sc.textFile(logFile).cache();
-
-    long numAs = logData.filter(new Function<String, Boolean>() {
-      public Boolean call(String s) { return s.contains("a"); }
-    }).count();
-
-    long numBs = logData.filter(new Function<String, Boolean>() {
-      public Boolean call(String s) { return s.contains("b"); }
-    }).count();
-
-    LOG.info("Lines with a: " + numAs + ", lines with b: " + numBs);
-    */
 
     sc.stop();
 
