@@ -119,8 +119,8 @@ import org.apache.sqoop.utils.ClassUtils;
 public class SparkSubmissionEngine extends SubmissionEngine {
 
   private static Logger LOG = Logger.getLogger(SparkSubmissionEngine.class);
-  //private SparkConf sparkJobConf;
-  //private JavaSparkContext sparkJavaContext;
+  private SparkConf sparkConf;
+  private JavaSparkContext sc;
 
   /**
    * Global configuration object that is built from hadoop configuration files
@@ -181,6 +181,10 @@ public class SparkSubmissionEngine extends SubmissionEngine {
 
     //if(isLocal()) {
     //LOG.info("Detected MapReduce local mode, some methods might not work correctly.");
+
+    sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
+    sc = new JavaSparkContext(sparkConf);
+
   }
 
 
@@ -208,8 +212,8 @@ public class SparkSubmissionEngine extends SubmissionEngine {
   public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
-    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
-    JavaSparkContext sc = new JavaSparkContext(sparkConf);
+    //SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
+    //JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
     //This additional setting up of configuration is to be done on each submission
     //(as in the MR engine)
