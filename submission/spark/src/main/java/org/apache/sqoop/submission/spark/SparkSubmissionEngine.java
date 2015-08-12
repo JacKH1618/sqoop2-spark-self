@@ -116,25 +116,18 @@ import org.apache.sqoop.utils.ClassUtils;
  * This is very simple and straightforward implementation of spark based
  * submission engine.
  */
-public class SparkSubmissionEngine extends SubmissionEngine implements Serializable {
+public class SparkSubmissionEngine extends SubmissionEngine {
 
   private static Logger LOG = Logger.getLogger(SparkSubmissionEngine.class);
   //private SparkConf sparkJobConf;
   //private JavaSparkContext sparkJavaContext;
 
   /**
-   * Global configuration object that is build from hadoop configuration files
+   * Global configuration object that is built from hadoop configuration files
    * on engine initialization and cloned during each new submission creation.
    */
-  private transient Configuration globalConfiguration;
+  private Configuration globalConfiguration;
   //private transient JobConf jobConf;
-
-  //private static final java.io.ObjectStreamField[] serialPersistentFields =  {
-  //new ObjectStreamField("globalConfiguration", org.apache.hadoop.conf.Configuration.class) };
-
-  private /*transient */ IntermediateDataFormat<Object> fromIDF = null;
-  private /*transient*/ IntermediateDataFormat<Object> toIDF = null;
-  private /*transient*/ Matcher matcher;
 
   /**
    * {@inheritDoc}
@@ -215,12 +208,7 @@ public class SparkSubmissionEngine extends SubmissionEngine implements Serializa
   public boolean submit(JobRequest sparkJobRequest) {
 
     //Move this to initialize()
-    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local")/*.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")/*.set("spark.authenticate", "true"). set("spark.authenticate.secret", "jackh")*/;
-    //sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-    //sparkConf.set("spark.kryo.classesToRegister", "org.apache.hadoop.conf.Configuration");
-    //sparkConf.set("spark.kryo.classesToRegister", "org.apache.sqoop.connector.idf.IntermediateDataFormat");
-    //sparkConf.registerKryoClasses(Array(classOf[Configuration]));
-
+    SparkConf sparkConf = new SparkConf().setAppName("Sqoop on Spark").setMaster("local");
     JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
     //This additional setting up of configuration is to be done on each submission
