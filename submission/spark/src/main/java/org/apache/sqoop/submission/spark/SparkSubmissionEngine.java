@@ -17,100 +17,46 @@
  */
 package org.apache.sqoop.submission.spark;
 
-/*
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.util.Date;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobID;
-import org.apache.hadoop.mapred.JobStatus;
-import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.Logger;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.common.SqoopException;
-import org.apache.sqoop.driver.SubmissionEngine;
-import org.apache.sqoop.error.code.MapreduceSubmissionError;
-import org.apache.sqoop.execution.mapreduce.MRJobRequest;
-import org.apache.sqoop.execution.mapreduce.MapreduceExecutionEngine;
 import org.apache.sqoop.driver.JobRequest;
-import org.apache.sqoop.job.MRJobConstants;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
-import org.apache.sqoop.model.MSubmission;
-import org.apache.sqoop.model.SubmissionError;
-import org.apache.sqoop.repository.RepositoryManager;
-import org.apache.sqoop.submission.SubmissionStatus;
-import org.apache.sqoop.submission.counter.Counter;
-import org.apache.sqoop.submission.counter.CounterGroup;
-import org.apache.sqoop.submission.counter.Counters;
-*/
-
-import java.io.*;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.net.MalformedURLException;
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.Function;
-import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.connector.idf.IntermediateDataFormat;
-import org.apache.sqoop.connector.matcher.Matcher;
-import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.driver.SubmissionEngine;
-import org.apache.sqoop.common.MapContext;
-import org.apache.sqoop.driver.JobRequest;
-import org.apache.sqoop.error.code.MRExecutionError;
-import org.apache.sqoop.etl.io.DataWriter;
+import org.apache.sqoop.error.code.SparkSubmissionError;
+import org.apache.sqoop.execution.spark.SparkExecutionEngine;
+import org.apache.sqoop.execution.spark.SparkJobRequest;
 import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
 import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.job.MRJobConstants;
-import org.apache.sqoop.job.PrefixContext;
-import org.apache.sqoop.job.etl.Extractor;
-import org.apache.sqoop.job.etl.ExtractorContext;
-import org.apache.sqoop.job.io.SqoopWritable;
 import org.apache.sqoop.job.mr.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopSplit;
 import org.apache.sqoop.model.MSubmission;
-import org.apache.sqoop.execution.spark.SparkExecutionEngine;
-//import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
-import org.apache.sqoop.execution.spark.SparkJobRequest;
-import org.apache.log4j.Logger;
-import org.apache.sqoop.error.code.SparkSubmissionError;
-import org.apache.sqoop.common.SqoopException;
-//import org.apache.sqoop.job.mr.SqoopInputFormat;
+import org.apache.sqoop.model.SubmissionError;
+import org.apache.sqoop.submission.SubmissionStatus;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.util.Map;
+
+//import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
+//import org.apache.sqoop.job.mr.SqoopInputFormat;
 //Hadoop imports
-import org.apache.hadoop.conf.Configuration;
 //import org.apache.hadoop.mapred.JobConf;
 //import org.apache.hadoop.mapreduce.InputFormat;
-
 //Apache Spark imports
 //import org.apache.spark.api.java.*;
-import org.apache.spark.SparkConf;
 //import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.sqoop.model.SubmissionError;
-import org.apache.sqoop.schema.Schema;
-import org.apache.sqoop.submission.SubmissionStatus;
-import org.apache.sqoop.utils.ClassUtils;
 //import org.apache.spark.api.java.function.Function;
 //import org.apache.spark.rdd.HadoopRDD;
 
@@ -286,10 +232,6 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       }
 
       job.setInputFormatClass(request.getInputFormatClass());
-
-      job.setMapperClass(request.getMapperClass());
-      job.setMapOutputKeyClass(request.getMapOutputKeyClass());
-      job.setMapOutputValueClass(request.getMapOutputValueClass());
 
       job.setOutputFormatClass(request.getOutputFormatClass());
       job.setOutputKeyClass(request.getOutputKeyClass());

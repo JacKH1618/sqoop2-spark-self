@@ -3,18 +3,13 @@ package org.apache.sqoop.submission.spark;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
-import org.apache.sqoop.error.code.MRExecutionError;
 import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.etl.io.DataWriter;
 import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
@@ -29,7 +24,6 @@ import org.apache.sqoop.schema.Schema;
 import org.apache.sqoop.utils.ClassUtils;
 import scala.Tuple2;
 
-import java.io.DataOutputStream;
 import java.io.Serializable;
 import java.util.LinkedList;
 

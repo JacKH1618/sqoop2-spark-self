@@ -1,17 +1,15 @@
 package org.apache.sqoop.execution.spark;
 
 import org.apache.hadoop.conf.Configuration;
-//import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.*;
-import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.SqoopException;
-import org.apache.sqoop.error.code.MRExecutionError;
 import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.job.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
-import org.apache.sqoop.job.etl.*;
+import org.apache.sqoop.job.etl.Partition;
+import org.apache.sqoop.job.etl.PartitionerContext;
 import org.apache.sqoop.job.mr.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopSplit;
 import org.apache.sqoop.schema.Schema;
@@ -61,7 +59,7 @@ public class SqoopInputFormatSpark extends InputFormat<SqoopSplit, SqoopSplit> {
       splits.add(split);
     }
 
-    //SQOOP-2382: Need to skip this check in case extractors is set to 1
+    // SQOOP-2382: Need to skip this check in case extractors is set to 1
     // and null values are allowed in partitioning column
     if(splits.size() > maxPartitions && (false == partitionerContext.getSkipMaxPartitionCheck())) {
       throw new SqoopException(SparkExecutionError.SPARK_EXEC_0025,

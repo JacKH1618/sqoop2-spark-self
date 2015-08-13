@@ -5,8 +5,8 @@ import org.apache.sqoop.job.io.SqoopWritable;
 import java.util.LinkedList;
 
 
-//jackh: Maybe improve this later on so that the list is created and maintained internally
-//in the class (add method, etc) instead of the user having to create a list and pass it
+// jackh: Maybe improve this later on so that the list is created and maintained internally
+// in the class (add method, etc) instead of the user having to create a list and pass it
 
 public class SqoopWritableListWrapper {
 

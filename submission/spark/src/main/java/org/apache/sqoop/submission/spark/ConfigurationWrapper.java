@@ -20,7 +20,6 @@ public class ConfigurationWrapper implements Serializable {
   }
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    //in.defaultReadObject();
     conf = new Configuration();
     conf.readFields(in);
   }
