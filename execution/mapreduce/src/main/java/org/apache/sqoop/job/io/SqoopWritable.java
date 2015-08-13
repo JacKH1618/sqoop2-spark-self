@@ -22,7 +22,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
-import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.utils.ClassUtils;
 
 import java.io.DataInput;

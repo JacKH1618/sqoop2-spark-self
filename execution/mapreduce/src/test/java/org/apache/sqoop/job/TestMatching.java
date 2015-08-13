@@ -17,10 +17,30 @@
  */
 package org.apache.sqoop.job;
 
-import static org.apache.sqoop.connector.common.SqoopIDFUtils.BYTE_FIELD_CHARSET;
-import static org.apache.sqoop.connector.common.SqoopIDFUtils.toText;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.sqoop.common.Direction;
+import org.apache.sqoop.connector.common.EmptyConfiguration;
+import org.apache.sqoop.connector.idf.CSVIntermediateDataFormat;
+import org.apache.sqoop.connector.idf.IntermediateDataFormat;
+import org.apache.sqoop.connector.matcher.Matcher;
+import org.apache.sqoop.connector.matcher.MatcherFactory;
+import org.apache.sqoop.job.etl.*;
+import org.apache.sqoop.job.etl.Partitioner;
+import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.job.mr.MRConfigurationUtils;
+import org.apache.sqoop.job.mr.SqoopInputFormat;
+import org.apache.sqoop.job.mr.SqoopMapper;
+import org.apache.sqoop.job.util.MRJobTestUtil;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
+import org.apache.sqoop.schema.NullSchema;
+import org.apache.sqoop.schema.Schema;
+import org.apache.sqoop.schema.type.FixedPoint;
+import org.apache.sqoop.schema.type.FloatingPoint;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
+import org.testng.annotations.Test;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -30,37 +50,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.OutputCommitter;
-import org.apache.hadoop.mapreduce.OutputFormat;
-import org.apache.hadoop.mapreduce.RecordWriter;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.connector.common.EmptyConfiguration;
-import org.apache.sqoop.connector.idf.CSVIntermediateDataFormat;
-import org.apache.sqoop.connector.idf.IntermediateDataFormat;
-import org.apache.sqoop.connector.matcher.Matcher;
-import org.apache.sqoop.connector.matcher.MatcherFactory;
-import org.apache.sqoop.job.etl.Extractor;
-import org.apache.sqoop.job.etl.ExtractorContext;
-import org.apache.sqoop.job.etl.Partition;
-import org.apache.sqoop.job.etl.Partitioner;
-import org.apache.sqoop.job.etl.PartitionerContext;
-import org.apache.sqoop.job.io.SqoopWritable;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
-import org.apache.sqoop.job.mr.SqoopInputFormat;
-import org.apache.sqoop.job.mr.SqoopMapper;
-import org.apache.sqoop.job.util.MRJobTestUtil;
-import org.apache.sqoop.schema.NullSchema;
-import org.apache.sqoop.schema.Schema;
-import org.apache.sqoop.schema.type.FixedPoint;
-import org.apache.sqoop.schema.type.FloatingPoint;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Factory;
-import org.testng.annotations.Test;
+import static org.apache.sqoop.connector.common.SqoopIDFUtils.BYTE_FIELD_CHARSET;
+import static org.apache.sqoop.connector.common.SqoopIDFUtils.toText;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 
 public class TestMatching {

@@ -17,7 +17,20 @@
  */
 package org.apache.sqoop.job;
 
-import static org.testng.AssertJUnit.assertEquals;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.sqoop.common.Direction;
+import org.apache.sqoop.connector.common.EmptyConfiguration;
+import org.apache.sqoop.connector.idf.CSVIntermediateDataFormat;
+import org.apache.sqoop.connector.idf.IntermediateDataFormat;
+import org.apache.sqoop.job.etl.*;
+import org.apache.sqoop.job.etl.Partitioner;
+import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.job.mr.*;
+import org.apache.sqoop.job.util.MRJobTestUtil;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
+import org.testng.annotations.Test;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -25,36 +38,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.OutputCommitter;
-import org.apache.hadoop.mapreduce.OutputFormat;
-import org.apache.hadoop.mapreduce.RecordWriter;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.connector.common.EmptyConfiguration;
-import org.apache.sqoop.connector.idf.CSVIntermediateDataFormat;
-import org.apache.sqoop.connector.idf.IntermediateDataFormat;
-import org.apache.sqoop.job.etl.Destroyer;
-import org.apache.sqoop.job.etl.DestroyerContext;
-import org.apache.sqoop.job.etl.Extractor;
-import org.apache.sqoop.job.etl.ExtractorContext;
-import org.apache.sqoop.job.etl.Loader;
-import org.apache.sqoop.job.etl.LoaderContext;
-import org.apache.sqoop.job.etl.Partition;
-import org.apache.sqoop.job.etl.Partitioner;
-import org.apache.sqoop.job.etl.PartitionerContext;
-import org.apache.sqoop.job.io.SqoopWritable;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
-import org.apache.sqoop.job.mr.SqoopInputFormat;
-import org.apache.sqoop.job.mr.SqoopMapper;
-import org.apache.sqoop.job.mr.SqoopNullOutputFormat;
-import org.apache.sqoop.job.mr.SqoopSplit;
-import org.apache.sqoop.job.util.MRJobTestUtil;
-import org.testng.annotations.Test;
+import static org.testng.AssertJUnit.assertEquals;
 
 public class TestMapReduce {
 

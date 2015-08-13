@@ -643,6 +643,7 @@ limitations under the License.
     <module>test</module>
     <module>tools</module>
     <module>tomcat</module>
+    <module>mapred-spark-common</module>
   </modules>
 
   <build>

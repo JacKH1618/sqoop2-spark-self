@@ -31,7 +31,7 @@ import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
-import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.error.code.MRExecutionError;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Extractor;

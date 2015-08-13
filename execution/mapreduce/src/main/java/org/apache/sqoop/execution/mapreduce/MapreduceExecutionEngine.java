@@ -22,7 +22,7 @@ import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.MutableMapContext;
 import org.apache.sqoop.driver.ExecutionEngine;
 import org.apache.sqoop.driver.JobRequest;
-import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.From;
 import org.apache.sqoop.job.etl.To;
 import org.apache.sqoop.job.io.SqoopWritable;

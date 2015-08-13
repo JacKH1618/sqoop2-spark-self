@@ -33,7 +33,7 @@ import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.etl.io.DataReader;
-import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Loader;
 import org.apache.sqoop.job.etl.LoaderContext;

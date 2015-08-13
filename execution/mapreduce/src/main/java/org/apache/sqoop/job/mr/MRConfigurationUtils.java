@@ -23,7 +23,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.json.JSONUtils;
 import org.apache.sqoop.json.util.SchemaSerialization;
 import org.apache.sqoop.model.ConfigUtils;

@@ -13,7 +13,7 @@ import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.etl.io.DataWriter;
 import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
-import org.apache.sqoop.job.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Extractor;
 import org.apache.sqoop.job.etl.ExtractorContext;

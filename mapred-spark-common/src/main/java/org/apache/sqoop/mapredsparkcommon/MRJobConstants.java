@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sqoop.job;
+package org.apache.sqoop.mapredsparkcommon;
 
 import org.apache.sqoop.core.ConfigurationConstants;
 import org.apache.sqoop.driver.DriverConstants;
+import org.apache.sqoop.job.Constants;
 
 public final class MRJobConstants extends Constants {
   /**
