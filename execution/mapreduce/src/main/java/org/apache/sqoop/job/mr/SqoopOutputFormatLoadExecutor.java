@@ -19,12 +19,7 @@
 package org.apache.sqoop.job.mr;
 
 import com.google.common.base.Throwables;
-
-import java.io.IOException;
-import java.util.concurrent.*;
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -36,16 +31,22 @@ import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
-import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.error.code.MRExecutionError;
-import org.apache.sqoop.mapredsparkcommon.PrefixContext;
+import org.apache.sqoop.etl.io.DataReader;
 import org.apache.sqoop.job.etl.Loader;
 import org.apache.sqoop.job.etl.LoaderContext;
-import org.apache.sqoop.etl.io.DataReader;
-import org.apache.sqoop.submission.counter.SqoopCounters;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.PrefixContext;
 import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
+import org.apache.sqoop.submission.counter.SqoopCounters;
 import org.apache.sqoop.utils.ClassUtils;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 
 public class SqoopOutputFormatLoadExecutor {
 

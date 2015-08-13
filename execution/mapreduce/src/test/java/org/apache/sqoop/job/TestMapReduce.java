@@ -34,6 +34,7 @@ import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.mapredsparkcommon.SqoopSplit;
 import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
+
 import org.testng.annotations.Test;
 
 import java.io.DataInput;

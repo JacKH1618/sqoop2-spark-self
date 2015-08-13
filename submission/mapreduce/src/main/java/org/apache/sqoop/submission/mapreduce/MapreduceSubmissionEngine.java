@@ -17,40 +17,32 @@
  */
 package org.apache.sqoop.submission.mapreduce;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.util.Date;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobID;
-import org.apache.hadoop.mapred.JobStatus;
-import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.common.SqoopException;
+import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.driver.SubmissionEngine;
 import org.apache.sqoop.error.code.MapreduceSubmissionError;
 import org.apache.sqoop.execution.mapreduce.MRJobRequest;
 import org.apache.sqoop.execution.mapreduce.MapreduceExecutionEngine;
-import org.apache.sqoop.driver.JobRequest;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.model.SubmissionError;
 import org.apache.sqoop.submission.SubmissionStatus;
 import org.apache.sqoop.submission.counter.Counter;
 import org.apache.sqoop.submission.counter.CounterGroup;
 import org.apache.sqoop.submission.counter.Counters;
+
+import java.io.*;
+import java.net.MalformedURLException;
+import java.util.Date;
+import java.util.Map;
 
 
 /**

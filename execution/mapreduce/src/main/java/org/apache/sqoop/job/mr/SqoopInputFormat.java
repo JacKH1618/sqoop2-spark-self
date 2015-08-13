@@ -17,30 +17,26 @@
  */
 package org.apache.sqoop.job.mr;
 
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.InputFormat;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.mapredsparkcommon.PrefixContext;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.error.code.MRExecutionError;
-import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.Partition;
 import org.apache.sqoop.job.etl.Partitioner;
 import org.apache.sqoop.job.etl.PartitionerContext;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
+import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
+import org.apache.sqoop.mapredsparkcommon.PrefixContext;
 import org.apache.sqoop.mapredsparkcommon.SqoopSplit;
 import org.apache.sqoop.schema.Schema;
 import org.apache.sqoop.utils.ClassUtils;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * An InputFormat for MapReduce job.
