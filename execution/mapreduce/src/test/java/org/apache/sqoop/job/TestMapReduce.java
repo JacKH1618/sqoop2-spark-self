@@ -29,6 +29,7 @@ import org.apache.sqoop.job.etl.Partitioner;
 import org.apache.sqoop.job.io.SqoopWritable;
 import org.apache.sqoop.job.mr.*;
 import org.apache.sqoop.job.util.MRJobTestUtil;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.testng.annotations.Test;
 

@@ -36,7 +36,7 @@ import org.apache.sqoop.execution.spark.SparkJobRequest;
 import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
 import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopSplit;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.model.SubmissionError;

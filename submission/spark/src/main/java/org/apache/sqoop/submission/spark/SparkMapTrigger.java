@@ -18,7 +18,7 @@ import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.job.etl.Extractor;
 import org.apache.sqoop.job.etl.ExtractorContext;
 import org.apache.sqoop.job.io.SqoopWritable;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopSplit;
 import org.apache.sqoop.schema.Schema;
 import org.apache.sqoop.utils.ClassUtils;

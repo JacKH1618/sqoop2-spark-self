@@ -44,7 +44,7 @@ import org.apache.sqoop.execution.mapreduce.MRJobRequest;
 import org.apache.sqoop.execution.mapreduce.MapreduceExecutionEngine;
 import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
-import org.apache.sqoop.job.mr.MRConfigurationUtils;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.model.SubmissionError;
 import org.apache.sqoop.submission.SubmissionStatus;

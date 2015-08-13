@@ -21,6 +21,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 public class SqoopReducer extends Reducer<SqoopWritable, NullWritable, SqoopWritable, NullWritable> {
 
   static {
-    MRConfigurationUtils.configureLogging();
+    MRConfigurationUtils.configureLogging(SqoopMapper.class);
   }
   public static final Logger LOG = Logger.getLogger(SqoopReducer.class);
 

@@ -33,6 +33,7 @@ import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.error.code.MRExecutionError;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.Partition;
 import org.apache.sqoop.job.etl.Partitioner;

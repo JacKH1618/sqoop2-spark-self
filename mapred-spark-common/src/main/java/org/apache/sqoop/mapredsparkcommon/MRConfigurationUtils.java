@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sqoop.job.mr;
+package org.apache.sqoop.mapredsparkcommon;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -23,7 +23,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.json.JSONUtils;
 import org.apache.sqoop.json.util.SchemaSerialization;
 import org.apache.sqoop.model.ConfigUtils;
@@ -442,11 +441,11 @@ public final class MRConfigurationUtils {
     // Instantiation is prohibited
   }
 
-  public static void configureLogging() {
+  public static void configureLogging(Class klass) {
     try {
       Properties props = new Properties();
       InputStream resourceAsStream =
-          SqoopMapper.class.getResourceAsStream("/META-INF/log4j.properties");
+          klass.getResourceAsStream("/META-INF/log4j.properties");
       props.load(resourceAsStream);
       PropertyConfigurator.configure(props);
     } catch (Exception e) {

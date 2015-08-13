@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.sqoop.common.Direction;
+import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.model.Config;
 import org.apache.sqoop.model.ConfigClass;
 import org.apache.sqoop.model.ConfigurationClass;
