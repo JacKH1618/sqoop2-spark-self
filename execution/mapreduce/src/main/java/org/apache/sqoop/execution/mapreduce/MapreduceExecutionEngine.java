@@ -25,7 +25,7 @@ import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.From;
 import org.apache.sqoop.job.etl.To;
-import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.job.mr.SqoopInputFormat;
 import org.apache.sqoop.job.mr.SqoopMapper;
 import org.apache.sqoop.job.mr.SqoopNullOutputFormat;

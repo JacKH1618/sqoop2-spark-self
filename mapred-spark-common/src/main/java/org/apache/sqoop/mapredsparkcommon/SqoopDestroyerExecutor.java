@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sqoop.job.mr;
+package org.apache.sqoop.mapredsparkcommon;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.job.PrefixContext;
 import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
-import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.Destroyer;
 import org.apache.sqoop.job.etl.DestroyerContext;
 import org.apache.sqoop.schema.Schema;

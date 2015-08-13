@@ -28,7 +28,7 @@ import org.apache.sqoop.connector.matcher.Matcher;
 import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.job.etl.*;
 import org.apache.sqoop.job.etl.Partitioner;
-import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.job.mr.SqoopInputFormat;
 import org.apache.sqoop.job.mr.SqoopMapper;

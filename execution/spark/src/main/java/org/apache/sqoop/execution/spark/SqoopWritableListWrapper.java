@@ -1,7 +1,8 @@
 package org.apache.sqoop.execution.spark;
 
 
-import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
+
 import java.util.LinkedList;
 
 

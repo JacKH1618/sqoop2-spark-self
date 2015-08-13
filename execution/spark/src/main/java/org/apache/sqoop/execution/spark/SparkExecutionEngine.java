@@ -26,7 +26,7 @@ import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.From;
 import org.apache.sqoop.job.etl.To;
-import org.apache.sqoop.job.mr.SqoopInputFormat;
+//import org.apache.sqoop.job.mr.SqoopInputFormat;
 
 /**
  *
@@ -49,7 +49,7 @@ public class SparkExecutionEngine extends ExecutionEngine {
     addDependencies(sparkJobRequest);
 
     // Configure classes for import
-    sparkJobRequest.setInputFormatClass(SqoopInputFormat.class);
+    sparkJobRequest.setInputFormatClass(SqoopInputFormatSpark.class);
 
     sparkJobRequest.setOutputFormatClass(SqoopNullOutputFormatSpark.class);
     sparkJobRequest.setOutputKeyClass(SqoopWritableListWrapper.class);

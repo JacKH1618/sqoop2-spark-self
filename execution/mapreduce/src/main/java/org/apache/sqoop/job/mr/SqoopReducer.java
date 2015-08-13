@@ -20,7 +20,7 @@ package org.apache.sqoop.job.mr;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.log4j.Logger;
-import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 
 import java.io.IOException;

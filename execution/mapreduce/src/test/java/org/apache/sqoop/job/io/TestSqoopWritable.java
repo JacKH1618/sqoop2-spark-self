@@ -34,6 +34,7 @@ import java.io.InputStream;
 
 import org.apache.sqoop.connector.idf.CSVIntermediateDataFormat;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.schema.Schema;
 import org.apache.sqoop.schema.type.Text;
 import org.testng.annotations.BeforeMethod;

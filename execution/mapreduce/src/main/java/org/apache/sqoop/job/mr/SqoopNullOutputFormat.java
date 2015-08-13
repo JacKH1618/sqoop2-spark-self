@@ -30,7 +30,8 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.SqoopDestroyerExecutor;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 
 /**
  * An output format for MapReduce job.

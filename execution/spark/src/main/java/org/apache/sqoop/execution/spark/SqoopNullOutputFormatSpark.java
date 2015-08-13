@@ -23,7 +23,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
-import org.apache.sqoop.job.mr.SqoopDestroyerExecutor;
+import org.apache.sqoop.mapredsparkcommon.SqoopDestroyerExecutor;
 
 import java.io.IOException;
 

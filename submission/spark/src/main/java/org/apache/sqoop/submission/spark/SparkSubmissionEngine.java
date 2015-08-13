@@ -37,7 +37,7 @@ import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
 import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
-import org.apache.sqoop.job.mr.SqoopSplit;
+import org.apache.sqoop.mapredsparkcommon.SqoopSplit;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.model.SubmissionError;
 import org.apache.sqoop.submission.SubmissionStatus;
@@ -49,16 +49,6 @@ import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.util.Map;
 
-//import org.apache.sqoop.execution.spark.SqoopInputFormatSpark;
-//import org.apache.sqoop.job.mr.SqoopInputFormat;
-//Hadoop imports
-//import org.apache.hadoop.mapred.JobConf;
-//import org.apache.hadoop.mapreduce.InputFormat;
-//Apache Spark imports
-//import org.apache.spark.api.java.*;
-//import org.apache.spark.SparkContext;
-//import org.apache.spark.api.java.function.Function;
-//import org.apache.spark.rdd.HadoopRDD;
 
 /**
  * This is very simple and straightforward implementation of spark based

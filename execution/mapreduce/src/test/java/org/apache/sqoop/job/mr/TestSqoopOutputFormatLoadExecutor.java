@@ -36,7 +36,7 @@ import org.apache.sqoop.connector.matcher.MatcherFactory;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.job.etl.Loader;
 import org.apache.sqoop.job.etl.LoaderContext;
-import org.apache.sqoop.job.io.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.job.util.MRJobTestUtil;
 import org.apache.sqoop.schema.NullSchema;
 import org.apache.sqoop.schema.Schema;

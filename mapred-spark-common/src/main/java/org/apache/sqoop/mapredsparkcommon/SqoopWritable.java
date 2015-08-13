@@ -16,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sqoop.job.io;
+package org.apache.sqoop.mapredsparkcommon;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.sqoop.connector.idf.IntermediateDataFormat;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.utils.ClassUtils;
 
 import java.io.DataInput;
@@ -49,8 +48,9 @@ public class SqoopWritable implements Configurable, WritableComparable<SqoopWrit
     this.toIDF = dataFormat;
   }
 
-  // default/package visibility for testing
-  void setString(String data) {
+  // Needed to change the visibility from the previous default/package visibility for testing
+  // to public after moving this class to the mapredsparkcommon package
+  public void setString(String data) {
     this.toIDF.setCSVTextData(data);
   }
 
