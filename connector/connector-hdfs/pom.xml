@@ -62,7 +62,7 @@ limitations under the License.
   </dependencies>
 
   <build>
-    <finalName>sqoop</finalName>
+    <finalName>${artifactId}-${version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

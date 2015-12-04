@@ -27,6 +27,7 @@ import org.apache.sqoop.utils.ClassUtils;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * Writable used to load the data to the {@link #Transferable} entity TO
@@ -34,7 +35,7 @@ import java.io.IOException;
  * For instance: job.setMapOutputKeyClass(..,) and  job.setOutputKeyClass(...);
  */
 
-public class SqoopWritable implements Configurable, WritableComparable<SqoopWritable> {
+public class SqoopWritable implements Configurable, WritableComparable<SqoopWritable>, Serializable {
   private IntermediateDataFormat<?> toIDF;
   private Configuration conf;
 

@@ -23,12 +23,14 @@ import org.apache.sqoop.classification.InterfaceStability;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.schema.SchemaError;
 
+import java.io.Serializable;
+
 /**
  * Base class for all the supported types in the Sqoop {@link #Schema}
  */
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
-public abstract class Column {
+public abstract class Column implements Serializable {
 
   /**
    * Name of the column. It is optional

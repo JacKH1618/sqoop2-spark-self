@@ -35,10 +35,7 @@ import org.apache.sqoop.error.code.SparkExecutionError;
 import org.apache.sqoop.etl.io.DataReader;
 import org.apache.sqoop.job.etl.Loader;
 import org.apache.sqoop.job.etl.LoaderContext;
-import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
-import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
-import org.apache.sqoop.mapredsparkcommon.PrefixContext;
-import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
+import org.apache.sqoop.mapredsparkcommon.*;
 import org.apache.sqoop.submission.counter.SqoopCounters;
 import org.apache.sqoop.utils.ClassUtils;
 
@@ -94,7 +91,7 @@ public class SqoopOutputFormatLoadExecutorSpark {
     toDataFormat.setSchema(matcher.getToSchema());
   }
 
-  public RecordWriter<SqoopWritableListWrapper, NullWritable> getRecordWriter() {
+  public RecordWriter<IntermediateDataFormat<?>, Integer> getRecordWriter() {
     consumerFuture = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat
         ("OutputFormatLoader-consumer").build()).submit(
             new ConsumerThread(context));
@@ -105,22 +102,15 @@ public class SqoopOutputFormatLoadExecutorSpark {
    * This is a reader-writer problem and can be solved
    * with two semaphores.
    */
-  private class SqoopRecordWriter extends RecordWriter<SqoopWritableListWrapper, NullWritable> {
+  private class SqoopRecordWriter extends RecordWriter<IntermediateDataFormat<?>, Integer> {
 
     @Override
-    public void write(SqoopWritableListWrapper key, NullWritable value) throws InterruptedException {
+    public void write(IntermediateDataFormat<?> key, Integer value) throws InterruptedException {
+      free.acquire();
+      checkIfConsumerThrew();
       // NOTE: this is the place where data written from SqoopMapper writable is available to the SqoopOutputFormat
-      // Retrieve the linked list of SqoopWritables inside the SqoopWritableListWrapper object, iterate through it,
-      // and write each of them
-      LinkedList<SqoopWritable> sqoopWritables = key.getSqoopWritablesList();
-      ListIterator<SqoopWritable> listIterator = sqoopWritables.listIterator();
-      while(listIterator.hasNext()) {
-        free.acquire();
-        checkIfConsumerThrew();
-        SqoopWritable currentRow = listIterator.next();
-        toDataFormat.setCSVTextData(currentRow.toString());
-        filled.release();
-      }
+      toDataFormat.setCSVTextData(key.toString());
+      filled.release();
     }
 
     @Override

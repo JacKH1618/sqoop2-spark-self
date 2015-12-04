@@ -19,7 +19,6 @@ package org.apache.sqoop.submission.spark;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
@@ -28,6 +27,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.sqoop.common.Direction;
 import org.apache.sqoop.common.MapContext;
 import org.apache.sqoop.common.SqoopException;
+import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.driver.JobRequest;
 import org.apache.sqoop.driver.SubmissionEngine;
 import org.apache.sqoop.error.code.SparkSubmissionError;
@@ -38,6 +38,7 @@ import org.apache.sqoop.execution.spark.SqoopWritableListWrapper;
 import org.apache.sqoop.mapredsparkcommon.MRConfigurationUtils;
 import org.apache.sqoop.mapredsparkcommon.MRJobConstants;
 import org.apache.sqoop.mapredsparkcommon.SqoopSplit;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 import org.apache.sqoop.model.MSubmission;
 import org.apache.sqoop.model.SubmissionError;
 import org.apache.sqoop.submission.SubmissionStatus;
@@ -231,15 +232,50 @@ public class SparkSubmissionEngine extends SubmissionEngine {
       JavaPairRDD<SqoopSplit, SqoopSplit> initRDD = sc.newAPIHadoopRDD(job.getConfiguration(),
           SqoopInputFormatSpark.class, SqoopSplit.class, SqoopSplit.class);
 
+      // For debugging - check size of initial RDD; remove in production
+      int numPartitions = initRDD.partitions().size();
+
       // Create SparkMapTrigger object and use it to trigger mapToPair()
       ConfigurationWrapper wrappedConf = new ConfigurationWrapper(job.getConfiguration());
       SparkMapTrigger sparkMapTriggerObj = new SparkMapTrigger(initRDD, wrappedConf);
-      JavaPairRDD<SqoopWritableListWrapper, NullWritable> mappedRDD = sparkMapTriggerObj.triggerSparkMapValues();
+      JavaPairRDD<IntermediateDataFormat<Object>, Integer> mappedRDD = sparkMapTriggerObj.triggerSparkMap();
 
       // Add reduce phase/any transformation code here
+      // For debugging - check size of RDD before partitioning; remove in production
+      numPartitions = mappedRDD.partitions().size();
+
+      JavaPairRDD<IntermediateDataFormat<Object>, Integer> repartitionedRDD = null;
+
+      // Get number of loaders, if specified
+      if(request.getLoaders() != null) {
+        long numLoaders = request.getLoaders();
+        long numExtractors = (request.getExtractors() != null) ?
+          (request.getExtractors()) : (job.getConfiguration().getLong(MRJobConstants.JOB_ETL_EXTRACTOR_NUM, 10));
+
+        if(numLoaders > numExtractors) {
+          // Repartition the RDD: yields evenly balanced partitions but has a shuffle cost
+          repartitionedRDD = mappedRDD.repartition(request.getLoaders());
+        }
+        else if(numLoaders < numExtractors) {
+          // Use coalesce() in this case. Shuffle tradeoff: turning shuffle on will give us evenly balanced partitions
+          // leading to an optimum write time but will incur network costs; shuffle off rids us of the network cost
+          // but might lead to sub-optimal write performance if the partitioning by the InputFormar was skewed in the
+          // first place
+          repartitionedRDD = mappedRDD.coalesce(request.getLoaders(), false);
+        }
+        else {
+          // Do not do any repartitioning/coalescing if loaders were specified but were equal to extractors
+          // Check if this statement incurs any cost
+          repartitionedRDD = mappedRDD;
+        }
+      }
+
+      // For debugging - check size of RDD after partitioning; remove in production
+      numPartitions = repartitionedRDD.partitions().size();
 
       // Calls the OutputFormat for writing
-      mappedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
+      //mappedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
+      repartitionedRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
 
       // Data transfer completed successfully if here
       request.getJobSubmission().setStatus(SubmissionStatus.SUCCEEDED);

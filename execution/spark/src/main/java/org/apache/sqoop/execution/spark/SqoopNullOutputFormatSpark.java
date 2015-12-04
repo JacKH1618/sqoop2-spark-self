@@ -23,14 +23,17 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.log4j.Logger;
 import org.apache.sqoop.common.Direction;
+import org.apache.sqoop.connector.idf.IntermediateDataFormat;
 import org.apache.sqoop.mapredsparkcommon.SqoopDestroyerExecutor;
+import org.apache.sqoop.mapredsparkcommon.SqoopSplit;
+import org.apache.sqoop.mapredsparkcommon.SqoopWritable;
 
 import java.io.IOException;
 
 /**
  * An output format for MapReduce job.
  */
-public class SqoopNullOutputFormatSpark extends OutputFormat<SqoopWritableListWrapper, NullWritable> {
+public class SqoopNullOutputFormatSpark extends OutputFormat<IntermediateDataFormat<?>, Integer> {
 
   public static final Logger LOG = Logger.getLogger(SqoopNullOutputFormatSpark.class);
 
@@ -40,7 +43,7 @@ public class SqoopNullOutputFormatSpark extends OutputFormat<SqoopWritableListWr
   }
 
   @Override
-  public RecordWriter<SqoopWritableListWrapper, NullWritable> getRecordWriter(TaskAttemptContext context) {
+  public RecordWriter<IntermediateDataFormat<?>, Integer> getRecordWriter(TaskAttemptContext context) {
     SqoopOutputFormatLoadExecutorSpark executor = new SqoopOutputFormatLoadExecutorSpark(context);
     return executor.getRecordWriter();
   }
