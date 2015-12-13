@@ -269,6 +269,10 @@ public class SparkSubmissionEngine extends SubmissionEngine {
           repartitionedRDD = mappedRDD;
         }
       }
+      else {
+        // Do not do any repartitioning/coalescing no loaders are specified
+        repartitionedRDD = mappedRDD;
+      }
 
       // For debugging - check size of RDD after partitioning; remove in production
       numPartitions = repartitionedRDD.partitions().size();
